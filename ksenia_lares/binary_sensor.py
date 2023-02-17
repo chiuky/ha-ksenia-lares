@@ -23,7 +23,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=6)
 
 DEFAULT_DEVICE_CLASS = "motion"
 DOOR_DEVICE_CLASS = "door"

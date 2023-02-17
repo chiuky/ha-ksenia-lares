@@ -25,7 +25,7 @@ class LaresBase:
 
         self._auth = aiohttp.BasicAuth(username, password)
         self._ip = host
-        self._port = 4202
+        self._port = 80
         self._host = f"http://{host}:{self._port}"
 
     async def info(self):
@@ -78,7 +78,7 @@ class LaresBase:
 
     async def zoneDescriptions(self):
         """Get available zones"""
-        response = await self.get("zones/zonesDescription48IP.xml")
+        response = await self.get("zones/zonesDescription128IP.xml")
 
         if response is None:
             return None
@@ -89,7 +89,7 @@ class LaresBase:
 
     async def zones(self):
         """Get available zones"""
-        response = await self.get("zones/zonesStatus48IP.xml")
+        response = await self.get("zones/zonesStatus128IP.xml")
 
         if response is None:
             return None
