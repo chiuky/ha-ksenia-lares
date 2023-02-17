@@ -3,7 +3,7 @@
   "name": "Ksenia Lares Alarm",
   "version": "1.0.1",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/ksenia_lares",
+  "documentation": "https://github.com/chiuky/ha-ksenia-lares",
   "requirements": [
     "lxml",
     "getmac"
@@ -13,6 +13,6 @@
   "homekit": {},
   "dependencies": [],
   "codeowners": [
-    "@johnnybegood"
+    "donato.chiuchilo@gmail.com"
   ]
 }
