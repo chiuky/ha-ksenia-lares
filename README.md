@@ -12,6 +12,6 @@ Ksenia Lares (pre 4.0) integration for home assistant. This is integration is in
 - [ ] Move SDK/API to seperate repo
 
 
-# ls /usr/share/hassio/homeassistant/custom_components/ksenia_lares/
-# sudo cp -R ha-ksenia-lares/ksenia_lares/ /usr/share/hassio/homeassistant/custom_components
-# sudo rm -R /usr/share/hassio/homeassistant/custom_components/ksenia_lares/
+ls /usr/share/hassio/homeassistant/custom_components/ksenia_lares/
+sudo cp -R ha-ksenia-lares/ksenia_lares/ /usr/share/hassio/homeassistant/custom_components
+sudo rm -R /usr/share/hassio/homeassistant/custom_components/ksenia_lares/
