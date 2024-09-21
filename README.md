@@ -1,16 +1,16 @@
 # Home Assistant Ksenia Lares integration
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-Ksenia Lares 48IP integration for home assistant. Compatible with BTicino alarm systems.
+Ksenia Lares IP integration for home assistant. Compatible with BTicino alarm systems.
 
 **This integration will set up the following platforms.**
 
 Platform | Description
 -- | --
 `binary_sensor` | For each zone, defaults to movement sensor.
-`sensor` | For each partition, showing the ARM status. 
+`sensor` | For each partition, showing the ARM status. Show temperature sensors
 `alarm_control_panel` | ARM and disarm based on partitions and scenarios
-`switch` | Bypass zones/partitions
+`switch` | Bypass zones/partitions/output
 
 ## Requirements
 This integration relies on the web interface to be activated, this is not always the case. Please contact your alarm intaller for more information on activation.
@@ -18,12 +18,12 @@ This integration relies on the web interface to be activated, this is not always
 ## Installation
 ### Installation via HACS
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=johnnybegood&repository=ha-ksenia-lares)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=chiuky&repository=ha-ksenia-lares)
 
 1. Open HACS
 2. Goto the menu in to top right corner
 3. Goto custom respositories
-4. Add this repositry `https://github.com/johnnybegood/ha-ksenia-lares`
+4. Add this repositry `https://github.com/chiuky/ha-ksenia-lares`
 5. Click _explore & download respositories_
 6. Search for and add "Ksenia Lares"
 7. Restart Home Assistant
