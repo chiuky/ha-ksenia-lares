@@ -1,30 +1,31 @@
 """Config flow for Ksenia Lares Alarm integration."""
+
 import logging
 from typing import Any
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlow,
-    FlowResult,
 )
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
 from .base import LaresBase
 from .const import (
-    DOMAIN,
     CONF_PARTITION_AWAY,
     CONF_PARTITION_HOME,
     CONF_PARTITION_NIGHT,
-    CONF_SCENARIO_HOME,
+    CONF_PIN,
     CONF_SCENARIO_AWAY,
-    CONF_SCENARIO_NIGHT,
     CONF_SCENARIO_DISARM,
-    CONF_PIN
+    CONF_SCENARIO_HOME,
+    CONF_SCENARIO_NIGHT,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("host"): str,
-        vol.Required("port", default=4202): int,
+        vol.Required("port", default=80): int,
         vol.Required("username"): str,
         vol.Required("password"): str,
+        vol.Required("scan_interval", default=10): int,
     }
 )
 
@@ -68,7 +70,7 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return LaresOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -97,6 +99,7 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+
 class LaresOptionsFlowHandler(OptionsFlow):
     """Handle a options flow for Ksenia Lares Alarm."""
 
@@ -107,7 +110,7 @@ class LaresOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -116,8 +119,7 @@ class LaresOptionsFlowHandler(OptionsFlow):
         select_partitions = {v: v for v in list(filter(None, partitions)) if v != ""}
 
         scenarios = await self.client.scenario_descriptions()
-        scenarios_with_empty = [""] + scenarios
-
+        scenarios_with_empty = ["", *scenarios]
         options = {
             vol.Optional(CONF_PIN): str,
             vol.Required(

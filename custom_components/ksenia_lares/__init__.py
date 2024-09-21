@@ -1,25 +1,32 @@
 """The Ksenia Lares Alarm integration."""
+
 import asyncio
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 from .base import LaresBase
+from .const import CONF_SCAN_INTERVAL, DATA_COORDINATOR, DATA_UPDATE_LISTENER, DOMAIN
 from .coordinator import LaresDataUpdateCoordinator
-from .const import DOMAIN, DATA_COORDINATOR, DATA_UPDATE_LISTENER
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.ALARM_CONTROL_PANEL, Platform.SWITCH]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ksenia Lares Alarm from a config entry."""
 
     client = LaresBase(entry.data)
-    coordinator = LaresDataUpdateCoordinator(hass, client)
+    scan_interval = entry.data[CONF_SCAN_INTERVAL]
+    coordinator = LaresDataUpdateCoordinator(hass, client, scan_interval)
 
     # Preload device info
     await client.device_info()
@@ -31,11 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DATA_UPDATE_LISTENER: unsub_options_update_listener,
     }
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+    return bool(1)  # True
 
 
 async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -43,7 +48,7 @@ async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -61,14 +66,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
 
     if config_entry.version == 1:
         new = {**config_entry.data}
-        new["port"] = 4202
+        new["port"] = 80
 
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=new)
 
-    return True
+    return bool(1)  # True

@@ -12,36 +12,9 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port",
                     "password": "Password",
+                    "port": "Port",
                     "username": "Username"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "description": "Link partitions to states, the state will be set when the selected partitions are armed",
-                "data": {
-                    "pin": "PIN",
-                    "scenario_disarm": "Disarm scenario",
-                    "partition_away": "Away partitions",
-                    "scenario_away": "Away scenario",
-                    "partition_home": "Home partitions",
-                    "scenario_home": "Home scenario",
-                    "partition_night": "Night partitions",
-                    "scenario_night": "Night scenario"
-                },
-                "data_description": {
-                    "pin": "PIN to use for zone/partition bypass",
-                    "scenario_disarm": "Select the scenario to activate to disarm",
-                    "partition_away": "Select all partitions that need to armed for away state",
-                    "scenario_away": "Select the scenario to activate to arm away",
-                    "partition_home": "Select all partitions that need to armed for home state",
-                    "scenario_home": "Select the scenario to activate to arm home",
-                    "partition_night": "Select all partitions that need to armed for night state",
-                    "scenario_night": "Select the scenario to activate to arm night"
                 }
             }
         }
@@ -50,6 +23,33 @@
         "switch": {
             "bypass": {
                 "name": "Bypass"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "partition_away": "Away partitions",
+                    "partition_home": "Home partitions",
+                    "partition_night": "Night partitions",
+                    "pin": "PIN",
+                    "scenario_away": "Away scenario",
+                    "scenario_disarm": "Disarm scenario",
+                    "scenario_home": "Home scenario",
+                    "scenario_night": "Night scenario"
+                },
+                "data_description": {
+                    "partition_away": "Select all partitions that need to armed for away state",
+                    "partition_home": "Select all partitions that need to armed for home state",
+                    "partition_night": "Select all partitions that need to armed for night state",
+                    "pin": "PIN to use for zone/partition bypass",
+                    "scenario_away": "Select the scenario to activate to arm away",
+                    "scenario_disarm": "Select the scenario to activate to disarm",
+                    "scenario_home": "Select the scenario to activate to arm home",
+                    "scenario_night": "Select the scenario to activate to arm night"
+                },
+                "description": "Link different alarm states to partition and scenarios."
             }
         }
     }

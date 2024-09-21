@@ -1,31 +1,30 @@
-"""This component provides support for Lares motion/door events."""
-from datetime import timedelta
+"""Provides support for Lares motion/door events."""
+
 import logging
 
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
-
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
+    DATA_COORDINATOR,
+    DATA_PARTITIONS,
     DATA_ZONES,
-    ZONE_BYPASS_ON,
+    DOMAIN,
+    PARTITION_STATUS_ALARM,
+    PARTITION_STATUS_ARMED,
+    PARTITION_STATUS_ARMED_IMMEDIATE,
+    PARTITION_STATUS_ARMING,
+    PARTITION_STATUS_DISARMED,
+    PARTITION_STATUS_PENDING,
     ZONE_STATUS_ALARM,
     ZONE_STATUS_NOT_USED,
-    DATA_COORDINATOR,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=10)
-
-DEFAULT_DEVICE_CLASS = "motion"
 
 
 async def async_setup_entry(
@@ -42,14 +41,30 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    async_add_entities(
-        LaresBinarySensor(coordinator, idx, zone_descriptions[idx], device_info)
-        for idx, zone in enumerate(coordinator.data[DATA_ZONES])
-    )
+    zones = coordinator.data[DATA_ZONES]
+
+    def _async_add_lares_sensors() -> None:
+        zoneSensors = addLaresZoneSensors(
+            coordinator, zones, zone_descriptions, device_info
+        )
+        async_add_entities(zoneSensors)
+
+    def addLaresZoneSensors(coordinator, zones, zone_descriptions, device_info):
+        entities = []
+        for idx, zone in enumerate(zones):
+            if zone is not None and zone["status"] != ZONE_STATUS_NOT_USED:
+                entities.append(
+                    LaresZoneSensor(
+                        coordinator, idx, zone_descriptions[idx], device_info
+                    )
+                )
+        return entities
+
+    _async_add_lares_sensors()
 
 
-class LaresBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """An implementation of a Lares door/window/motion sensor."""
+class LaresZoneSensor(CoordinatorEntity, BinarySensorEntity):
+    """Implement a Lares door/window/motion sensor."""
 
     def __init__(self, coordinator, idx, description, device_info) -> None:
         """Initialize the sensor."""
@@ -60,7 +75,7 @@ class LaresBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._idx = idx
 
         self._attr_device_info = device_info
-        self._attr_device_class = DEFAULT_DEVICE_CLASS
+        self._attr_device_class = "motion"
 
         # Hide sensor if it is indicated as not used
         is_used = (
@@ -72,25 +87,71 @@ class LaresBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_entity_registry_visible_default = is_used
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return Unique ID string."""
-        return f"lares_zones_{self._idx}"
+        return f"lares_zone_{self._idx}"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this camera."""
         return self._description
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
             self._coordinator.data[DATA_ZONES][self._idx]["status"] == ZONE_STATUS_ALARM
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
+
         status = self._coordinator.data[DATA_ZONES][self._idx]["status"]
 
         return status != ZONE_STATUS_NOT_USED
+
+
+class LaresSensor(CoordinatorEntity, BinarySensorEntity):
+    """Implement  a Lares partition sensor."""
+
+    def __init__(self, coordinator, idx, description, device_info) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._coordinator = coordinator
+        self._description = description
+        self._idx = idx
+
+        self._attr_icon = "mdi:shield"
+        self._attr_device_info = device_info
+        self._attr_device_class = SensorDeviceClass.ENUM
+        self._attr_options = [
+            PARTITION_STATUS_DISARMED,
+            PARTITION_STATUS_ARMED,
+            PARTITION_STATUS_ARMED_IMMEDIATE,
+            PARTITION_STATUS_ARMING,
+            PARTITION_STATUS_PENDING,
+            PARTITION_STATUS_ALARM,
+        ]
+
+        # Hide sensor if it has no description
+        is_inactive = not self._description
+
+        self._attr_entity_registry_enabled_default = not is_inactive
+        self._attr_entity_registry_visible_default = not is_inactive
+
+    @property
+    def unique_id(self) -> str:
+        """Return Unique ID string."""
+        return f"lares_partitions_{self._idx}"
+
+    @property
+    def name(self) -> str:
+        """Return the name of this entity."""
+        return self._description
+
+    @property
+    def native_value(self) -> str:
+        """Return the status of this partition."""
+        return self._coordinator.data[DATA_PARTITIONS][self._idx]["status"]
