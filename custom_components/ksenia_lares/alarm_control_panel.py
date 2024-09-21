@@ -1,47 +1,51 @@
-"""This component provides support for Lares alarm  control panel."""
+"""Component that provides support for Lares alarm  control panel."""
+
 import logging
-from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMING,
-)
-
-from .coordinator import LaresDataUpdateCoordinator
 from .const import (
-    DOMAIN,
-    DATA_COORDINATOR,
-    DATA_PARTITIONS,
-    PARTITION_STATUS_ARMED,
-    PARTITION_STATUS_ARMED_IMMEDIATE,
-    PARTITION_STATUS_ARMING,
     CONF_PARTITION_AWAY,
     CONF_PARTITION_HOME,
     CONF_PARTITION_NIGHT,
     CONF_SCENARIO_AWAY,
+    CONF_SCENARIO_DISARM,
     CONF_SCENARIO_HOME,
     CONF_SCENARIO_NIGHT,
-    CONF_SCENARIO_DISARM,
+    DATA_COORDINATOR,
+    DATA_PARTITIONS,
+    DOMAIN,
+    PARTITION_STATUS_ARMED,
+    PARTITION_STATUS_ARMED_IMMEDIATE,
+    PARTITION_STATUS_ARMING,
 )
+from .coordinator import LaresDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up alarm control panel of the Lares alarm device from a config entry."""
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
@@ -62,9 +66,9 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    async_add_devices(
+    async_add_entities(
         [
-            LaresAlarmControlPanel(
+            LaresAlarmControlPanelEntity(
                 coordinator,
                 device_info,
                 partition_descriptions,
@@ -75,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     )
 
 
-class LaresAlarmControlPanel(CoordinatorEntity, AlarmControlPanelEntity):
+class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
     """An implementation of a Lares alarm control panel."""
 
     TYPE = DOMAIN
@@ -107,7 +111,7 @@ class LaresAlarmControlPanel(CoordinatorEntity, AlarmControlPanelEntity):
         return f"lares_panel_{name}"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this panel."""
         name = self._attr_device_info["name"]
         return f"Panel {name}"
@@ -168,9 +172,9 @@ class LaresAlarmControlPanel(CoordinatorEntity, AlarmControlPanelEntity):
     def __has_partition_with_status(self, status_list: list[str]) -> bool:
         """Return if any partitions is arming."""
         partitions = enumerate(self._coordinator.data[DATA_PARTITIONS])
-        in_state = list(
+        in_state = [
             idx for idx, partition in partitions if partition["status"] in status_list
-        )
+        ]
 
         _LOGGER.debug("%s in status %s", in_state, status_list)
 
