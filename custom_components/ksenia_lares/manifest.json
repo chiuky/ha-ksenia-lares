@@ -11,5 +11,5 @@
   "requirements": ["lxml==5.1.0", "getmac==0.9.4"],
   "ssdp": [],
   "zeroconf": [],
-  "version" : "2.0.1"
+  "version" : "2.0.2"
 }
