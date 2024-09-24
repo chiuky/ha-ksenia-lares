@@ -142,20 +142,19 @@ class LaresBase:
 
     async def temperatures(self):
         """Get lares temperatures."""
-        if self._temperature_indoor is None or self._temperature_outdoor is None:
-            response = await self.get("state/laresStatus.xml")
-            if response is None:
-                return None
-            self._temperature_indoor = (
-                response.xpath("/laresStatus/temperature/indoor")[0]
-                .text.replace("C", "")
-                .strip()
-            )
-            self._temperature_outdoor = (
-                response.xpath("/laresStatus/temperature/outdoor")[0]
-                .text.replace("C", "")
-                .strip()
-            )
+        response = await self.get("state/laresStatus.xml")
+        if response is None:
+            return None
+        self._temperature_indoor = (
+            response.xpath("/laresStatus/temperature/indoor")[0]
+            .text.replace("C", "")
+            .strip()
+        )
+        self._temperature_outdoor = (
+            response.xpath("/laresStatus/temperature/outdoor")[0]
+            .text.replace("C", "")
+            .strip()
+        )
         return [
             {
                 "description": "lares_temperature_indoor",
@@ -248,11 +247,11 @@ class LaresBase:
 
         return await self.send_command("setByPassZone", pinCode, params)
 
-    async def switch_output(self, outputId: int, pinCode: str, status: bool) -> bool:
+    async def switch_output(self, outputId: int, pinCode: str, switch: bool) -> bool:
         """Activate the given scenarios, requires the alarm code."""
         params = {
             "outputId": outputId,  # Lares output uses index starting with 0
-            "outputValue": 255 if status else 0,
+            "outputValue": 255 if switch else 0,
         }
 
         return await self.send_command("setOutput", pinCode, params)
