@@ -1,0 +1,31 @@
+// attualmente non è possibile dichiarare direttamente una scorciatoia per un task all'interno della cartella 
+// .vscode (ad esempio in tasks.json). Le scorciatoie personalizzate per i task devono essere configurate 
+// nel file globale keybindings.json, che si trova nella directory utente di Visual Studio Code.
+
+// Per eseguire un task direttamente da una scorciatoia, segui questi passaggi:
+// Aggiungi una scorciatoia nel file keybindings.json:
+// Apri il file delle scorciatoie in VS Code:
+// Premi 
+//    Ctrl+K, poi Ctrl+S 
+//    (oppure vai su File > Preferences > Keyboard Shortcuts).
+//     Clicca sull'icona a forma di ingranaggio in alto a destra e seleziona Open Keyboard Shortcuts (JSON).
+// Aggiungi la seguente configurazione:
+// json
+// {
+//     "key": "ctrl+alt+c", // La combinazione di tasti desiderata
+//     "command": "workbench.action.tasks.runTask",
+//     "args": "Copy Folder Task" // Nome del task dal file tasks.json
+// }
+// Salva e verifica:
+// Salva il file keybindings.json.
+// Premi la combinazione di tasti configurata (ad esempio, Ctrl+Alt+C) per eseguire direttamente il task.
+// Note importanti
+// La proprietà "args" deve corrispondere esattamente al valore della proprietà "label" del task nel file tasks.json.
+// Assicurati che la combinazione di tasti scelta non sia già utilizzata da altre funzionalità di VS Code. In caso di conflitti, puoi modificare la scorciatoia.
+// Se il task è impostato come predefinito (isDefault: true), puoi eseguirlo direttamente premendo Ctrl+Shift+B.
+
+{
+    "key": "ctrl+alt+q", // La combinazione di tasti desiderata
+    "command": "workbench.action.tasks.runTask",
+    "args": "ksenia_lares to Home Assistant" // Nome del task dal file tasks.json
+}

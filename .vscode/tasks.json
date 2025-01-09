@@ -1,0 +1,47 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "copy to Home Assistant", // Nome del task
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.vscode/copy_folder.ps1", // Percorso dello script
+                "-sourcePath",
+                "C:/Users/Donato Chiuchiolo/workspace-personal/ha-ksenia-lares/custom_components/ksenia_lares",// Percorso source
+                "-destinationPath",
+                "C:/Users/Donato Chiuchiolo/workspace-personal/homeassistant-core/homeassistant/components/ksenia_lares"// Percorso destinazione
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always", // Mostra sempre l'output nel terminale
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "copy to ha-ksenia-lares", // Nome del task
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/.vscode/copy_folder.ps1", // Percorso dello script
+                "-sourcePath",
+                "C:/Users/Donato Chiuchiolo/workspace-personal/homeassistant-core/homeassistant/components/ksenia_lares",// Percorso source
+                "-destinationPath",
+                "C:/Users/Donato Chiuchiolo/workspace-personal/ha-ksenia-lares/custom_components/ksenia_lares"// Percorso destinazione
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always", // Mostra sempre l'output nel terminale
+                "panel": "shared"
+            }
+        }
+    ]
+}
