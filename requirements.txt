@@ -1,0 +1,6 @@
+homeassistant==2025.11.0
+colorlog
+pre-commit
+#lares ksenia custom components dependencies
+lxml==5.1.0
+getmac==0.9.4
