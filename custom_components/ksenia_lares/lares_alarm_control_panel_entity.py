@@ -7,13 +7,8 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
+from homeassistant.components.alarm_control_panel.const import (
+    AlarmControlPanelState,
 )
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -94,26 +89,22 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
     def state(self) -> StateType:
         """Return the state of this panel."""
         if self.__has_partition_with_status(PARTITION_STATUS_ARMING):
-            return STATE_ALARM_ARMING
+            return AlarmControlPanelState.ARMING
 
         if self.__is_armed(CONF_PARTITION_AWAY):
-            return STATE_ALARM_ARMED_AWAY
+            return AlarmControlPanelState.ARMED_AWAY
 
         if self.__is_armed(CONF_PARTITION_HOME):
-            return STATE_ALARM_ARMED_HOME
+            return AlarmControlPanelState.ARMED_HOME
 
         if self.__is_armed(CONF_PARTITION_NIGHT):
-            return STATE_ALARM_ARMED_NIGHT
+            return AlarmControlPanelState.ARMED_NIGHT
 
         # If any of the not mapped partitions is armed, show custom as fallback
         if self.__has_partition_with_status(self.ARMED_STATUS):
-            return STATE_ALARM_ARMED_CUSTOM_BYPASS
+            return AlarmControlPanelState.ARMED_CUSTOM_BYPASS
 
-        return STATE_ALARM_DISARMED
-
-    async def async_alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm home command."""
-        await self.__command(CONF_SCENARIO_HOME, code)
+        return AlarmControlPanelState.DISARMED
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm home command."""
