@@ -192,10 +192,14 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
 
     async def __command(self, key: str, code: str | None = None) -> None:
         """Send arm home command."""
-        scenario_name = self._options[key]
+        scenario_name = self._options.get(key)
 
-        if scenario_name is None:
-            _LOGGER.warning("Skipping command, no definition for %s", key)
+        if not scenario_name:
+            _LOGGER.warning("Skipping command %s: no scenario configured", key)
+            return
+
+        if code is None:
+            _LOGGER.warning("Skipping command %s: no PIN code provided", key)
             return
 
         descriptions = enumerate(self._scenario_descriptions)
@@ -203,10 +207,23 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
         matches = list(match_gen)
 
         if len(matches) != 1:
-            _LOGGER.error("No match for %s (%s found)", key, len(matches))
+            _LOGGER.error(
+                "Scenario configuration error for %s: found %d matches for '%s'",
+                key,
+                len(matches),
+                scenario_name,
+            )
             return
 
         scenario = matches[0]
-        _LOGGER.debug("Activating scenario %s", scenario)
+        _LOGGER.info("Activating scenario %d (%s) for %s", scenario, scenario_name, key)
 
-        await self._coordinator.client.activate_scenario(scenario, code)
+        try:
+            result = await self._coordinator.client.activate_scenario(scenario, code)
+            if result:
+                _LOGGER.info("Successfully activated scenario %d", scenario)
+                await self._coordinator.async_request_refresh()
+            else:
+                _LOGGER.error("Failed to activate scenario %d", scenario)
+        except Exception as err:
+            _LOGGER.error("Error activating scenario %d: %s", scenario, err, exc_info=True)

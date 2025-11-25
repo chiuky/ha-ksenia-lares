@@ -18,21 +18,41 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensors attached to a Lares alarm device from a config entry."""
+    _LOGGER.debug("Setting up Lares binary sensors")
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    device_info = await coordinator.client.device_info()
-    zone_descriptions = await coordinator.client.zone_descriptions()
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    try:
+        device_info = await coordinator.client.device_info()
+        if device_info is None:
+            _LOGGER.error("Failed to get device info for binary sensors")
+            return
 
-    zones = coordinator.data[DATA_ZONES]
+        zone_descriptions = await coordinator.client.zone_descriptions()
+        if zone_descriptions is None:
+            _LOGGER.warning("No zone descriptions available")
+            zone_descriptions = []
+
+        # Fetch initial data so we have data when entities subscribe
+        await coordinator.async_refresh()
+
+        zones = coordinator.data.get(DATA_ZONES)
+        if zones is None:
+            _LOGGER.warning("No zones data available, skipping binary sensor setup")
+            return
+    except Exception as err:
+        _LOGGER.error("Error setting up binary sensors: %s", err, exc_info=True)
+        return
 
     def _async_add_lares_sensors() -> None:
         zone_sensors = _add_lares_zone_sensors(
             coordinator, zones, zone_descriptions, device_info
         )
-        async_add_entities(zone_sensors)
+        if zone_sensors:
+            _LOGGER.info("Adding %d zone binary sensors", len(zone_sensors))
+            async_add_entities(zone_sensors)
+        else:
+            _LOGGER.info("No zone binary sensors to add")
 
     def _add_lares_zone_sensors(
         coordinator,
@@ -41,14 +61,19 @@ async def async_setup_entry(
         device_info: dict,
     ) -> list:
         entities = []
-        if zones is not None:
+        if zones is not None and zone_descriptions is not None:
             for idx, zone in enumerate(zones):
-                if zone is not None and zone["status"] != ZONE_STATUS_NOT_USED:
-                    entities.append(
-                        LaresZoneSensor(
-                            coordinator, idx, zone_descriptions[idx], device_info
+                try:
+                    if zone is not None and zone.get("status") != ZONE_STATUS_NOT_USED:
+                        description = zone_descriptions[idx] if idx < len(zone_descriptions) else f"Zone {idx}"
+                        entities.append(
+                            LaresZoneSensor(
+                                coordinator, idx, description, device_info
+                            )
                         )
-                    )
+                except (IndexError, KeyError) as err:
+                    _LOGGER.warning("Error creating zone sensor %d: %s", idx, err)
+                    continue
         return entities
 
     _async_add_lares_sensors()

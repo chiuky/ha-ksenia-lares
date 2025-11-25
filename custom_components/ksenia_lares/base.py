@@ -40,24 +40,29 @@ class LaresBase:
         response = await self.get("info/generalInfo.xml")
 
         if response is None:
+            _LOGGER.warning("Failed to retrieve device info from %s", self._host)
             return None
 
-        mac = get_mac_address(ip=self._ip)
-        unique_id = str(mac)
+        try:
+            mac = get_mac_address(ip=self._ip)
+            unique_id = str(mac)
 
-        if mac is None:
-            # Fallback to IP addresses when MAC cannot be determined
-            unique_id = f"{self._ip}:{self._port}"
+            if mac is None:
+                _LOGGER.debug("MAC address not available, using IP:port as unique_id")
+                unique_id = f"{self._ip}:{self._port}"
 
-        return {
-            "mac": mac,
-            "id": unique_id,
-            "name": response.xpath("/generalInfo/productName")[0].text,
-            "info": response.xpath("/generalInfo/info1")[0].text,
-            "version": response.xpath("/generalInfo/productHighRevision")[0].text,
-            "revision": response.xpath("/generalInfo/productLowRevision")[0].text,
-            "build": response.xpath("/generalInfo/productBuildRevision")[0].text,
-        }
+            return {
+                "mac": mac,
+                "id": unique_id,
+                "name": response.xpath("/generalInfo/productName")[0].text,
+                "info": response.xpath("/generalInfo/info1")[0].text,
+                "version": response.xpath("/generalInfo/productHighRevision")[0].text,
+                "revision": response.xpath("/generalInfo/productLowRevision")[0].text,
+                "build": response.xpath("/generalInfo/productBuildRevision")[0].text,
+            }
+        except (IndexError, AttributeError) as err:
+            _LOGGER.error("Error parsing device info XML: %s", err)
+            return None
 
     async def device_info(self) -> dict | None:
         """Get device info."""
@@ -95,20 +100,28 @@ class LaresBase:
     async def zones(self) -> list[dict[str, str]] | None:
         """Get available zones."""
         model = await self.get_model()
+        if model is None:
+            _LOGGER.error("Unable to determine device model")
+            return None
+
         response = await self.get(f"zones/zonesStatus{model}.xml")
 
         if response is None:
+            _LOGGER.warning("Failed to retrieve zones status")
             return None
 
-        zones = response.xpath("/zonesStatus/zone")
-
-        return [
-            {
-                "status": zone.find("status").text,
-                "bypass": zone.find("bypass").text,
-            }
-            for zone in zones
-        ]
+        try:
+            zones = response.xpath("/zonesStatus/zone")
+            return [
+                {
+                    "status": zone.find("status").text,
+                    "bypass": zone.find("bypass").text,
+                }
+                for zone in zones
+            ]
+        except (AttributeError, TypeError) as err:
+            _LOGGER.error("Error parsing zones XML: %s", err)
+            return None
 
     async def output_descriptions(self) -> list[str] | None:
         """Get output descr zones."""
@@ -277,16 +290,25 @@ class LaresBase:
         url_param = "".join(f"&{k}={v}" for k, v in params.items())
         path = f"cmd/cmdOk.xml?cmd={command}&pin={pin_code}&redirectPage=/xml/cmd/cmdError.xml{url_param}"
 
-        _LOGGER.debug("Sending command %s", path)
+        _LOGGER.debug("Sending command: %s with params: %s", command, params)
 
-        response = await self.get(path)
-        cmd = response.xpath("/cmd")
+        try:
+            response = await self.get(path)
+            if response is None:
+                _LOGGER.error("Failed to send command %s: no response", command)
+                return False
 
-        if cmd is None or cmd[0].text != "cmdSent":
-            _LOGGER.error("Command send failed: %s", response)
+            cmd = response.xpath("/cmd")
+
+            if cmd is None or len(cmd) == 0 or cmd[0].text != "cmdSent":
+                _LOGGER.error("Command %s failed: %s", command, cmd[0].text if cmd and len(cmd) > 0 else "no response")
+                return False
+
+            _LOGGER.info("Command %s executed successfully", command)
+            return True
+        except Exception as err:
+            _LOGGER.error("Error executing command %s: %s", command, err, exc_info=True)
             return False
-
-        return True
 
     async def get(self, path: str) -> etree._Element | None:
         """Get method."""
@@ -297,16 +319,36 @@ class LaresBase:
                 aiohttp.ClientSession(auth=self._auth) as session,
                 session.get(url=url) as response,
             ):
+                if response.status != 200:
+                    _LOGGER.warning(
+                        "HTTP error %s when accessing %s", response.status, url
+                    )
+                    return None
+
                 xml = await response.read()
+                if not xml:
+                    _LOGGER.warning("Empty response from %s", url)
+                    return None
+
                 parser = etree.XMLParser(resolve_entities=False)
                 return etree.fromstring(xml, parser=parser)
 
         except aiohttp.ClientConnectorError as conn_err:
-            _LOGGER.debug("Host %s: Connection error %s", self._host, str(conn_err))
+            _LOGGER.warning(
+                "Connection error to %s: %s - Check device availability",
+                self._host,
+                str(conn_err),
+            )
         except aiohttp.ClientError as client_err:
-            _LOGGER.debug("Host %s: Client error %s", self._host, str(client_err))
+            _LOGGER.warning("Client error accessing %s: %s", self._host, str(client_err))
         except etree.XMLSyntaxError as xml_err:
-            _LOGGER.error("Host %s: XML parsing error %s", self._host, str(xml_err))
+            _LOGGER.error(
+                "XML parsing error from %s: %s - Device may have returned invalid data",
+                self._host,
+                str(xml_err),
+            )
         except Exception as err:
-            _LOGGER.exception("Host %s: Unexpected exception: %s", self._host, str(err))
+            _LOGGER.exception(
+                "Unexpected error accessing %s: %s", self._host, str(err)
+            )
         return None
