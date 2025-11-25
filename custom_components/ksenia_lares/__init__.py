@@ -2,8 +2,6 @@
 
 import asyncio
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,7 +10,6 @@ from .base import LaresBase
 from .const import CONF_SCAN_INTERVAL, DATA_COORDINATOR, DATA_UPDATE_LISTENER, DOMAIN
 from .coordinator import LaresDataUpdateCoordinator
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -40,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return bool(1)  # True
+    return True
 
 
 async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -76,4 +73,4 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=new)
 
-    return bool(1)  # True
+    return True

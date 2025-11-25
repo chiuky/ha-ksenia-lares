@@ -39,6 +39,7 @@ class LaresOutputSensor(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"lares_output_{self._idx}"
         self._attr_device_info = device_info
         self._attr_name = description
+        self._attr_has_entity_name = True
 
         is_used = (
             self._coordinator.data[DATA_OUTPUTS][self._idx]["type"]
@@ -51,7 +52,7 @@ class LaresOutputSensor(CoordinatorEntity, SwitchEntity):
     def get_status(self) -> bool | None:
         """Return true if the output is on."""
         status = self._coordinator.data[DATA_OUTPUTS][self._idx]["status"]
-        isOn = bool(1) if status == OUTPUT_STATUS_ON else bool(0)
+        isOn = status == OUTPUT_STATUS_ON
         if isOn:
             self._attr_icon = "mdi:lightbulb-on"
         else:
@@ -63,6 +64,14 @@ class LaresOutputSensor(CoordinatorEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Set a property related to the status."""
         return self.get_status()
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Switch on the output (sync wrapper)."""
+        raise NotImplementedError()
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Switch off the output (sync wrapper)."""
+        raise NotImplementedError()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch on the output."""

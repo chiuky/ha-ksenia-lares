@@ -10,7 +10,6 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.alarm_control_panel.const import (
     AlarmControlPanelState,
 )
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -56,6 +55,17 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
         self._attr_code_format = CodeFormat.NUMBER
         self._attr_device_info = device_info
         self._attr_code_arm_required = True
+        self._attr_has_entity_name = True
+
+        # Calculate supported features
+        supported_features = AlarmControlPanelEntityFeature(0)
+        if self._options[CONF_SCENARIO_AWAY] != "":
+            supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
+        if self._options[CONF_SCENARIO_HOME] != "":
+            supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
+        if self._options[CONF_SCENARIO_NIGHT] != "":
+            supported_features |= AlarmControlPanelEntityFeature.ARM_NIGHT
+        self._attr_supported_features = supported_features
 
     @property
     def unique_id(self) -> str:
@@ -70,25 +80,9 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
         return f"Panel {name}"
 
     @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return the list of supported features."""
-        supported_features = AlarmControlPanelEntityFeature(0)
-
-        if self._options[CONF_SCENARIO_AWAY] != "":
-            supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
-
-        if self._options[CONF_SCENARIO_HOME] != "":
-            supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-
-        if self._options[CONF_SCENARIO_NIGHT] != "":
-            supported_features |= AlarmControlPanelEntityFeature.ARM_NIGHT
-
-        return supported_features
-
-    @property
-    def state(self) -> StateType:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of this panel."""
-        if self.__has_partition_with_status(PARTITION_STATUS_ARMING):
+        if self.__has_partition_with_status([PARTITION_STATUS_ARMING]):
             return AlarmControlPanelState.ARMING
 
         if self.__is_armed(CONF_PARTITION_AWAY):
@@ -106,17 +100,61 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
 
         return AlarmControlPanelState.DISARMED
 
-    async def async_alarm_arm_away(self, code: str | None = None) -> None:
-        """Send arm home command."""
-        await self.__command(CONF_SCENARIO_AWAY, code)
+    def alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command (sync wrapper)."""
+        raise NotImplementedError()
 
-    async def async_alarm_arm_night(self, code: str | None = None) -> None:
-        """Send arm home command."""
-        await self.__command(CONF_SCENARIO_NIGHT, code)
+    def alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command (sync wrapper)."""
+        raise NotImplementedError()
+
+    def alarm_arm_away(self, code: str | None = None) -> None:
+        """Send arm away command (sync wrapper)."""
+        raise NotImplementedError()
+
+    def alarm_arm_night(self, code: str | None = None) -> None:
+        """Send arm night command (sync wrapper)."""
+        raise NotImplementedError()
+
+    def alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Send arm vacation command (not supported)."""
+        raise NotImplementedError()
+
+    def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+        """Send arm custom bypass command (not supported)."""
+        raise NotImplementedError()
+
+    def alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command (not supported)."""
+        raise NotImplementedError()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.__command(CONF_SCENARIO_DISARM, code)
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
+        await self.__command(CONF_SCENARIO_HOME, code)
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Send arm away command."""
+        await self.__command(CONF_SCENARIO_AWAY, code)
+
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
+        """Send arm night command."""
+        await self.__command(CONF_SCENARIO_NIGHT, code)
+
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Send arm vacation command (not supported)."""
+        _LOGGER.warning("Arm vacation is not supported by Lares alarm")
+
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+        """Send arm custom bypass command (not supported)."""
+        _LOGGER.warning("Arm custom bypass is not supported by Lares alarm")
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command (not supported)."""
+        _LOGGER.warning("Alarm trigger is not supported by Lares alarm")
 
     def __has_partition_with_status(self, status_list: list[str]) -> bool:
         """Return if any partitions is arming."""

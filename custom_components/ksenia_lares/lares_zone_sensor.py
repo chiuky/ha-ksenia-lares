@@ -19,6 +19,7 @@ class LaresZoneSensor(CoordinatorEntity, BinarySensorEntity):
 
         self._attr_device_info = device_info
         self._attr_device_class = "motion"
+        self._attr_has_entity_name = True
 
         # Hide sensor if it is indicated as not used
         is_used = (

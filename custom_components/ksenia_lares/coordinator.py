@@ -1,9 +1,9 @@
 """The Ksenia Lares data update coordinator."""
 
-# import async_timeout
-import asyncio
 from datetime import timedelta
 import logging
+
+from async_timeout import timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -37,7 +37,7 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Ksenia Lares client."""
-        async with asyncio.timeout(DEFAULT_TIMEOUT):
+        async with timeout(DEFAULT_TIMEOUT):
             zones = await self.client.zones()
             partitions = await self.client.partitions()
             temperatures = await self.client.temperatures()

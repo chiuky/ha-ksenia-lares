@@ -39,6 +39,7 @@ class LaresBypassSwitchSensor(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"lares_bypass_{self._idx}"
         self._attr_device_info = device_info
         self._attr_name = description
+        self._attr_has_entity_name = True
 
         is_used = (
             self._coordinator.data[DATA_ZONES][self._idx]["status"]
@@ -53,6 +54,14 @@ class LaresBypassSwitchSensor(CoordinatorEntity, SwitchEntity):
         """Return true if the zone is bypassed."""
         status = self._coordinator.data[DATA_ZONES][self._idx]["bypass"]
         return status == ZONE_BYPASS_ON
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Bypass the zone (sync wrapper)."""
+        raise NotImplementedError()
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Unbypass the zone (sync wrapper)."""
+        raise NotImplementedError()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Bypass the zone."""

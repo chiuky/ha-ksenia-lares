@@ -36,6 +36,7 @@ class LaresPartitionSensor(CoordinatorEntity, SensorEntity):
             PARTITION_STATUS_PENDING,
             PARTITION_STATUS_ALARM,
         ]
+        self._attr_has_entity_name = True
 
         # Hide sensor if it has no description
         is_inactive = not self._description

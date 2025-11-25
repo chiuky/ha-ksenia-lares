@@ -27,12 +27,13 @@ class LaresTemperatureSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = "mdi:temperature-celsius"
         self._attr_device_info = device_info
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        self.attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
         self._attr_native_value = state
 
         self._attr_unique_id = f"lares_temperature_sensor_{idx}"
+        self._attr_has_entity_name = True
 
         # Hide sensor if it has no description
         is_inactive = not self._description
@@ -49,11 +50,6 @@ class LaresTemperatureSensor(CoordinatorEntity, SensorEntity):
     def name(self) -> str:
         """Return the original name of this entity, based on the API xpath."""
         return self._description
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit_of_measurement."""
-        return "°C"
 
     @property
     def native_value(self) -> str:

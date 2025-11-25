@@ -298,10 +298,15 @@ class LaresBase:
                 session.get(url=url) as response,
             ):
                 xml = await response.read()
-                return etree.fromstring(xml)  # noqa: S320
+                parser = etree.XMLParser(resolve_entities=False)
+                return etree.fromstring(xml, parser=parser)
 
         except aiohttp.ClientConnectorError as conn_err:
             _LOGGER.debug("Host %s: Connection error %s", self._host, str(conn_err))
-        except:  # pylint: disable=bare-except  # noqa: E722
-            _LOGGER.debug("Host %s: Unknown exception occurred", self._host)
+        except aiohttp.ClientError as client_err:
+            _LOGGER.debug("Host %s: Client error %s", self._host, str(client_err))
+        except etree.XMLSyntaxError as xml_err:
+            _LOGGER.error("Host %s: XML parsing error %s", self._host, str(xml_err))
+        except Exception as err:
+            _LOGGER.exception("Host %s: Unexpected exception: %s", self._host, str(err))
         return None
