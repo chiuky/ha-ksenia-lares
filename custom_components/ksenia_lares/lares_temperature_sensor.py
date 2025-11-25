@@ -9,13 +9,19 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_TEMPERATURES
+from .coordinator import LaresDataUpdateCoordinator
 
 
 class LaresTemperatureSensor(CoordinatorEntity, SensorEntity):
     """Implement a Lares temperature sensor."""
 
     def __init__(
-        self, coordinator, idx, description, state: float | str | None, device_info
+        self,
+        coordinator: LaresDataUpdateCoordinator,
+        idx: int,
+        description: str,
+        state: float | str | None,
+        device_info: dict,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

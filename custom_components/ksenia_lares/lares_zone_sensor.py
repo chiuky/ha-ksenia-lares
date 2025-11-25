@@ -4,12 +4,19 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_ZONES, ZONE_STATUS_ALARM, ZONE_STATUS_NOT_USED
+from .coordinator import LaresDataUpdateCoordinator
 
 
 class LaresZoneSensor(CoordinatorEntity, BinarySensorEntity):
     """Implement a Lares door/window/motion sensor."""
 
-    def __init__(self, coordinator, idx, description, device_info) -> None:
+    def __init__(
+        self,
+        coordinator: LaresDataUpdateCoordinator,
+        idx: int,
+        description: str,
+        device_info: dict,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 

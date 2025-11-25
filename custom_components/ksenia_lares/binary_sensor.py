@@ -29,12 +29,17 @@ async def async_setup_entry(
     zones = coordinator.data[DATA_ZONES]
 
     def _async_add_lares_sensors() -> None:
-        zoneSensors = addLaresZoneSensors(
+        zone_sensors = _add_lares_zone_sensors(
             coordinator, zones, zone_descriptions, device_info
         )
-        async_add_entities(zoneSensors)
+        async_add_entities(zone_sensors)
 
-    def addLaresZoneSensors(coordinator, zones, zone_descriptions, device_info):
+    def _add_lares_zone_sensors(
+        coordinator,
+        zones: list[dict] | None,
+        zone_descriptions: list[str] | None,
+        device_info: dict,
+    ) -> list:
         entities = []
         if zones is not None:
             for idx, zone in enumerate(zones):

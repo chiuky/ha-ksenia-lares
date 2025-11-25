@@ -82,7 +82,7 @@ class LaresBase:
 
         return info
 
-    async def zone_descriptions(self):
+    async def zone_descriptions(self) -> list[str] | None:
         """Get available zones."""
         model = await self.get_model()
         if self._zone_descriptions is None:
@@ -92,7 +92,7 @@ class LaresBase:
 
         return self._zone_descriptions
 
-    async def zones(self):
+    async def zones(self) -> list[dict[str, str]] | None:
         """Get available zones."""
         model = await self.get_model()
         response = await self.get(f"zones/zonesStatus{model}.xml")
@@ -110,7 +110,7 @@ class LaresBase:
             for zone in zones
         ]
 
-    async def output_descriptions(self):
+    async def output_descriptions(self) -> list[str] | None:
         """Get output descr zones."""
         model = await self.get_model()
         if self._output_descriptions is None:
@@ -120,15 +120,15 @@ class LaresBase:
 
         return self._output_descriptions
 
-    async def outputs(self):
+    async def outputs(self) -> list[dict[str, str]] | None:
         """Get available zones."""
         model = await self.get_model()
-        outputsStatus = await self.get(f"outputs/outputsStatus{model}.xml")
+        outputs_status = await self.get(f"outputs/outputsStatus{model}.xml")
 
-        if outputsStatus is None:
+        if outputs_status is None:
             return None
 
-        outputs = outputsStatus.xpath("/outputsStatus/output")
+        outputs = outputs_status.xpath("/outputsStatus/output")
 
         return [
             {
@@ -140,7 +140,7 @@ class LaresBase:
             for output in outputs
         ]
 
-    async def temperatures(self):
+    async def temperatures(self) -> list[dict[str, str]] | None:
         """Get lares temperatures."""
         response = await self.get("state/laresStatus.xml")
         if response is None:
@@ -166,7 +166,7 @@ class LaresBase:
             },
         ]
 
-    async def partitions(self):
+    async def partitions(self) -> list[dict[str, str]] | None:
         """Get status of partitions."""
         model = await self.get_model()
         response = await self.get(f"partitions/partitionsStatus{model}.xml")
@@ -183,7 +183,7 @@ class LaresBase:
             for partition in partitions
         ]
 
-    async def partition_descriptions(self):
+    async def partition_descriptions(self) -> list[str] | None:
         """Get available partitions."""
         model = await self.get_model()
 
@@ -195,7 +195,7 @@ class LaresBase:
 
         return self._partition_descriptions
 
-    async def get_descriptions(self, path: str, element: str) -> list | None:
+    async def get_descriptions(self, path: str, element: str) -> list[str] | None:
         """Get descriptions."""
         response = await self.get(path)
 
@@ -205,7 +205,7 @@ class LaresBase:
         content = response.xpath(element)
         return [item.text for item in content]
 
-    async def scenarios(self):
+    async def scenarios(self) -> list[dict[str, int | bool]] | None:
         """Get status of scenarios."""
         response = await self.get("scenarios/scenariosOptions.xml")
 
@@ -223,7 +223,7 @@ class LaresBase:
             for idx, scenario in enumerate(scenarios)
         ]
 
-    async def scenario_descriptions(self):
+    async def scenario_descriptions(self) -> list[str] | None:
         """Get descriptions of scenarios."""
         if self._scenario_descriptions is None:
             self._scenario_descriptions = await self.get_descriptions(
@@ -232,29 +232,29 @@ class LaresBase:
 
         return self._scenario_descriptions
 
-    async def activate_scenario(self, scenario: int, pinCode: str) -> bool:
+    async def activate_scenario(self, scenario: int, pin_code: str) -> bool:
         """Activate the given scenarios, requires the alarm code."""
         params = {"macroId": scenario}
 
-        return await self.send_command("setMacro", pinCode, params)
+        return await self.send_command("setMacro", pin_code, params)
 
-    async def bypass_zone(self, zoneId: int, pinCode: str, bypass: bool) -> bool:
+    async def bypass_zone(self, zone_id: int, pin_code: str, bypass: bool) -> bool:
         """Activate the given scenarios, requires the alarm code."""
         params = {
-            "zoneId": zoneId + 1,  # Lares uses index starting with 1
+            "zoneId": zone_id + 1,  # Lares uses index starting with 1
             "zoneValue": 1 if bypass else 0,
         }
 
-        return await self.send_command("setByPassZone", pinCode, params)
+        return await self.send_command("setByPassZone", pin_code, params)
 
-    async def switch_output(self, outputId: int, pinCode: str, switch: bool) -> bool:
+    async def switch_output(self, output_id: int, pin_code: str, switch: bool) -> bool:
         """Activate the given scenarios, requires the alarm code."""
         params = {
-            "outputId": outputId,  # Lares output uses index starting with 0
+            "outputId": output_id,  # Lares output uses index starting with 0
             "outputValue": 255 if switch else 0,
         }
 
-        return await self.send_command("setOutput", pinCode, params)
+        return await self.send_command("setOutput", pin_code, params)
 
     async def get_model(self) -> str:
         """Get model information."""
@@ -271,11 +271,11 @@ class LaresBase:
         return self._model
 
     async def send_command(
-        self, command: str, pinCode: str, params: dict[str, int]
+        self, command: str, pin_code: str, params: dict[str, int]
     ) -> bool:
         """Send Command."""
-        urlparam = "".join(f"&{k}={v}" for k, v in params.items())
-        path = f"cmd/cmdOk.xml?cmd={command}&pin={pinCode}&redirectPage=/xml/cmd/cmdError.xml{urlparam}"
+        url_param = "".join(f"&{k}={v}" for k, v in params.items())
+        path = f"cmd/cmdOk.xml?cmd={command}&pin={pin_code}&redirectPage=/xml/cmd/cmdError.xml{url_param}"
 
         _LOGGER.debug("Sending command %s", path)
 
@@ -288,7 +288,7 @@ class LaresBase:
 
         return True
 
-    async def get(self, path):
+    async def get(self, path: str) -> etree._Element | None:
         """Get method."""
         url = f"{self._host}/xml/{path}"
 

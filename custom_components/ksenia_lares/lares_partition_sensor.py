@@ -12,12 +12,19 @@ from .const import (
     PARTITION_STATUS_DISARMED,
     PARTITION_STATUS_PENDING,
 )
+from .coordinator import LaresDataUpdateCoordinator
 
 
 class LaresPartitionSensor(CoordinatorEntity, SensorEntity):
     """Implement  a Lares partition sensor."""
 
-    def __init__(self, coordinator, idx, description, device_info) -> None:
+    def __init__(
+        self,
+        coordinator: LaresDataUpdateCoordinator,
+        idx: int,
+        description: str,
+        device_info: dict,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 

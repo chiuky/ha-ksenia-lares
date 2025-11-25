@@ -39,19 +39,21 @@ async def async_setup_entry(
     zones = coordinator.data[DATA_ZONES]
     outputs = coordinator.data[DATA_OUTPUTS]
 
-    def _async_add_laresBypassSwitch() -> None:
+    def _async_add_lares_bypass_switch() -> None:
         entities = []
-        zoneSensors = filterZoneSensors(
+        zone_sensors = _filter_zone_sensors(
             coordinator, zones, zone_descriptions, device_info
         )
-        outputSensors = filterOutputSensors(
+        output_sensors = _filter_output_sensors(
             coordinator, outputs, output_descriptions, device_info
         )
-        entities.extend(zoneSensors)
-        entities.extend(outputSensors)
+        entities.extend(zone_sensors)
+        entities.extend(output_sensors)
         async_add_entities(entities)
 
-    def filterZoneSensors(coordinator, zones, zone_descriptions, device_info):
+    def _filter_zone_sensors(
+        coordinator, zones: list[dict] | None, zone_descriptions: list[str] | None, device_info: dict
+    ) -> list:
         entities = []
         for idx, zone in enumerate(zones):
             if zone is not None and zone["status"] != ZONE_STATUS_NOT_USED:
@@ -62,7 +64,9 @@ async def async_setup_entry(
                 )
         return entities
 
-    def filterOutputSensors(coordinator, outputs, output_descriptions, device_info):
+    def _filter_output_sensors(
+        coordinator, outputs: list[dict] | None, output_descriptions: list[str] | None, device_info: dict
+    ) -> list:
         entities = []
         for idx, output in enumerate(outputs):
             if output is not None and output["type"] != ZONE_STATUS_NOT_USED:
@@ -73,4 +77,4 @@ async def async_setup_entry(
                 )
         return entities
 
-    _async_add_laresBypassSwitch()
+    _async_add_lares_bypass_switch()

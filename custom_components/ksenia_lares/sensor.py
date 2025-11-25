@@ -23,15 +23,17 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    def addLaresSensors() -> None:
-        partitionSensors = addLaresPartitionSensors(
+    def _add_lares_sensors() -> None:
+        partition_sensors = _add_lares_partition_sensors(
             coordinator, partition_descriptions, device_info
         )
-        temperatureSensors = addLaresTemperatureSensors(coordinator, device_info)
-        partitionSensors.extend(temperatureSensors)
-        async_add_entities(partitionSensors)
+        temperature_sensors = _add_lares_temperature_sensors(coordinator, device_info)
+        partition_sensors.extend(temperature_sensors)
+        async_add_entities(partition_sensors)
 
-    def addLaresPartitionSensors(coordinator, partition_descriptions, device_info):
+    def _add_lares_partition_sensors(
+        coordinator, partition_descriptions: list[str] | None, device_info: dict
+    ) -> list:
         entities = []
         if coordinator.data[DATA_PARTITIONS] is not None:
             for idx, partition in enumerate(coordinator.data[DATA_PARTITIONS]):
@@ -43,7 +45,7 @@ async def async_setup_entry(
                     )
         return entities
 
-    def addLaresTemperatureSensors(coordinator, device_info):
+    def _add_lares_temperature_sensors(coordinator, device_info: dict) -> list:
         entities = []
         if coordinator.data[DATA_TEMPERATURES] is not None:
             for idx, temperature in enumerate(coordinator.data[DATA_TEMPERATURES]):
@@ -59,4 +61,4 @@ async def async_setup_entry(
                     )
         return entities
 
-    addLaresSensors()
+    _add_lares_sensors()

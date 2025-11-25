@@ -49,16 +49,16 @@ class LaresOutputSensor(CoordinatorEntity, SwitchEntity):
         self._attr_entity_registry_enabled_default = is_used
         self._attr_entity_registry_visible_default = is_used
 
-    def get_status(self) -> bool | None:
+    def get_status(self) -> bool:
         """Return true if the output is on."""
         status = self._coordinator.data[DATA_OUTPUTS][self._idx]["status"]
-        isOn = status == OUTPUT_STATUS_ON
-        if isOn:
+        is_on = status == OUTPUT_STATUS_ON
+        if is_on:
             self._attr_icon = "mdi:lightbulb-on"
         else:
             self._attr_icon = "mdi:lightbulb-off"
 
-        return isOn
+        return is_on
 
     @property
     def is_on(self) -> bool | None:
