@@ -136,65 +136,87 @@ class LaresBase:
     async def outputs(self) -> list[dict[str, str]] | None:
         """Get available zones."""
         model = await self.get_model()
+        if model is None:
+            _LOGGER.error("Unable to determine device model for outputs")
+            return None
+
         outputs_status = await self.get(f"outputs/outputsStatus{model}.xml")
 
         if outputs_status is None:
+            _LOGGER.warning("Failed to retrieve outputs status")
             return None
 
-        outputs = outputs_status.xpath("/outputsStatus/output")
-
-        return [
-            {
-                "status": output.find("status").text,
-                "type": output.find("type").text,
-                "value": output.find("value").text,
-                "noPIN": output.find("noPIN").text,
-            }
-            for output in outputs
-        ]
+        try:
+            outputs = outputs_status.xpath("/outputsStatus/output")
+            return [
+                {
+                    "status": output.find("status").text,
+                    "type": output.find("type").text,
+                    "value": output.find("value").text,
+                    "noPIN": output.find("noPIN").text,
+                }
+                for output in outputs
+            ]
+        except (AttributeError, TypeError) as err:
+            _LOGGER.error("Error parsing outputs XML: %s", err)
+            return None
 
     async def temperatures(self) -> list[dict[str, str]] | None:
         """Get lares temperatures."""
         response = await self.get("state/laresStatus.xml")
         if response is None:
+            _LOGGER.warning("Failed to retrieve temperatures")
             return None
-        self._temperature_indoor = (
-            response.xpath("/laresStatus/temperature/indoor")[0]
-            .text.replace("C", "")
-            .strip()
-        )
-        self._temperature_outdoor = (
-            response.xpath("/laresStatus/temperature/outdoor")[0]
-            .text.replace("C", "")
-            .strip()
-        )
-        return [
-            {
-                "description": "lares_temperature_indoor",
-                "temperatureValue": self._temperature_indoor,
-            },
-            {
-                "description": "lares_temperature_outdoor",
-                "temperatureValue": self._temperature_outdoor,
-            },
-        ]
+
+        try:
+            self._temperature_indoor = (
+                response.xpath("/laresStatus/temperature/indoor")[0]
+                .text.replace("C", "")
+                .strip()
+            )
+            self._temperature_outdoor = (
+                response.xpath("/laresStatus/temperature/outdoor")[0]
+                .text.replace("C", "")
+                .strip()
+            )
+            return [
+                {
+                    "description": "lares_temperature_indoor",
+                    "temperatureValue": self._temperature_indoor,
+                },
+                {
+                    "description": "lares_temperature_outdoor",
+                    "temperatureValue": self._temperature_outdoor,
+                },
+            ]
+        except (IndexError, AttributeError, TypeError) as err:
+            _LOGGER.error("Error parsing temperatures XML: %s", err)
+            return None
 
     async def partitions(self) -> list[dict[str, str]] | None:
         """Get status of partitions."""
         model = await self.get_model()
+        if model is None:
+            _LOGGER.error("Unable to determine device model for partitions")
+            return None
+
         response = await self.get(f"partitions/partitionsStatus{model}.xml")
 
         if response is None:
+            _LOGGER.warning("Failed to retrieve partitions status")
             return None
 
-        partitions = response.xpath("/partitionsStatus/partition")
-
-        return [
-            {
-                "status": partition.text,
-            }
-            for partition in partitions
-        ]
+        try:
+            partitions = response.xpath("/partitionsStatus/partition")
+            return [
+                {
+                    "status": partition.text,
+                }
+                for partition in partitions
+            ]
+        except (AttributeError, TypeError) as err:
+            _LOGGER.error("Error parsing partitions XML: %s", err)
+            return None
 
     async def partition_descriptions(self) -> list[str] | None:
         """Get available partitions."""
@@ -213,28 +235,37 @@ class LaresBase:
         response = await self.get(path)
 
         if response is None:
+            _LOGGER.warning("Failed to retrieve descriptions from %s", path)
             return None
 
-        content = response.xpath(element)
-        return [item.text for item in content]
+        try:
+            content = response.xpath(element)
+            return [item.text for item in content]
+        except (AttributeError, TypeError) as err:
+            _LOGGER.error("Error parsing descriptions from %s: %s", path, err)
+            return None
 
     async def scenarios(self) -> list[dict[str, int | bool]] | None:
         """Get status of scenarios."""
         response = await self.get("scenarios/scenariosOptions.xml")
 
         if response is None:
+            _LOGGER.warning("Failed to retrieve scenarios")
             return None
 
-        scenarios = response.xpath("/scenariosOptions/scenario")
-
-        return [
-            {
-                "id": idx,
-                "enabled": scenario.find("abil").text == "TRUE",
-                "noPin": scenario.find("nopin").text == "TRUE",
-            }
-            for idx, scenario in enumerate(scenarios)
-        ]
+        try:
+            scenarios = response.xpath("/scenariosOptions/scenario")
+            return [
+                {
+                    "id": idx,
+                    "enabled": scenario.find("abil").text == "TRUE",
+                    "noPin": scenario.find("nopin").text == "TRUE",
+                }
+                for idx, scenario in enumerate(scenarios)
+            ]
+        except (AttributeError, TypeError) as err:
+            _LOGGER.error("Error parsing scenarios XML: %s", err)
+            return None
 
     async def scenario_descriptions(self) -> list[str] | None:
         """Get descriptions of scenarios."""
@@ -306,8 +337,11 @@ class LaresBase:
 
             _LOGGER.info("Command %s executed successfully", command)
             return True
-        except Exception as err:
-            _LOGGER.error("Error executing command %s: %s", command, err, exc_info=True)
+        except (IndexError, AttributeError) as err:
+            _LOGGER.error("Error parsing command response for %s: %s", command, err)
+            return False
+        except (OSError, TimeoutError) as err:
+            _LOGGER.error("Network error executing command %s: %s", command, err)
             return False
 
     async def get(self, path: str) -> etree._Element | None:
@@ -346,6 +380,18 @@ class LaresBase:
                 "XML parsing error from %s: %s - Device may have returned invalid data",
                 self._host,
                 str(xml_err),
+            )
+        except (OSError, TimeoutError) as err:
+            _LOGGER.warning(
+                "Network timeout or OS error accessing %s: %s",
+                self._host,
+                str(err),
+            )
+        except ValueError as err:
+            _LOGGER.error(
+                "Invalid response data from %s: %s",
+                self._host,
+                str(err),
             )
         except Exception as err:
             _LOGGER.exception(

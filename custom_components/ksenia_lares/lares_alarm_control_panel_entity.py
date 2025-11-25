@@ -225,5 +225,9 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
                 await self._coordinator.async_request_refresh()
             else:
                 _LOGGER.error("Failed to activate scenario %d", scenario)
+        except (OSError, TimeoutError, ConnectionError) as err:
+            _LOGGER.error("Network error activating scenario %d: %s", scenario, err)
+        except (KeyError, AttributeError) as err:
+            _LOGGER.error("Invalid response activating scenario %d: %s", scenario, err)
         except Exception as err:
-            _LOGGER.error("Error activating scenario %d: %s", scenario, err, exc_info=True)
+            _LOGGER.error("Unexpected error activating scenario %d: %s", scenario, err, exc_info=True)

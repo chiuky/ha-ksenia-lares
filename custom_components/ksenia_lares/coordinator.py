@@ -68,6 +68,12 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
         except asyncio.TimeoutError as err:
             _LOGGER.error("Timeout fetching data from Lares device")
             raise UpdateFailed(f"Timeout communicating with device: {err}") from err
+        except (OSError, ConnectionError) as err:
+            _LOGGER.error("Network error fetching data: %s", err)
+            raise UpdateFailed(f"Network error: {err}") from err
+        except (KeyError, AttributeError, TypeError) as err:
+            _LOGGER.error("Invalid data structure from Lares device: %s", err)
+            raise UpdateFailed(f"Invalid data received: {err}") from err
         except Exception as err:
-            _LOGGER.error("Error fetching data from Lares device: %s", err, exc_info=True)
+            _LOGGER.error("Unexpected error fetching data from Lares device: %s", err, exc_info=True)
             raise UpdateFailed(f"Error communicating with device: {err}") from err

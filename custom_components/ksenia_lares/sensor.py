@@ -36,8 +36,14 @@ async def async_setup_entry(
 
         # Fetch initial data so we have data when entities subscribe
         await coordinator.async_refresh()
+    except (KeyError, AttributeError, TypeError) as err:
+        _LOGGER.error("Invalid data structure setting up sensors: %s", err, exc_info=True)
+        return
+    except (OSError, TimeoutError) as err:
+        _LOGGER.error("Network error setting up sensors: %s", err)
+        return
     except Exception as err:
-        _LOGGER.error("Error setting up sensors: %s", err, exc_info=True)
+        _LOGGER.error("Unexpected error setting up sensors: %s", err, exc_info=True)
         return
 
     def _add_lares_sensors() -> None:

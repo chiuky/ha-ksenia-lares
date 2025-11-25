@@ -57,8 +57,14 @@ async def async_setup_entry(
         if zones is None and outputs is None:
             _LOGGER.warning("No zones or outputs data available, skipping switch setup")
             return
+    except (KeyError, AttributeError, TypeError) as err:
+        _LOGGER.error("Invalid data structure setting up switches: %s", err, exc_info=True)
+        return
+    except (OSError, TimeoutError) as err:
+        _LOGGER.error("Network error setting up switches: %s", err)
+        return
     except Exception as err:
-        _LOGGER.error("Error setting up switches: %s", err, exc_info=True)
+        _LOGGER.error("Unexpected error setting up switches: %s", err, exc_info=True)
         return
 
     def _async_add_lares_bypass_switch() -> None:

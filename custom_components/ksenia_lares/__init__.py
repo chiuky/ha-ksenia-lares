@@ -39,8 +39,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         _LOGGER.debug("Successfully connected to Lares device: %s", device_info.get("name"))
 
+    except (KeyError, ValueError, TypeError) as err:
+        _LOGGER.error("Invalid configuration data: %s", err, exc_info=True)
+        raise ConfigEntryNotReady(f"Invalid configuration: {err}") from err
+    except (OSError, TimeoutError) as err:
+        _LOGGER.error("Network error connecting to Lares device: %s", err)
+        raise ConfigEntryNotReady(f"Network error: {err}") from err
     except Exception as err:
-        _LOGGER.error("Error setting up Ksenia Lares: %s", err, exc_info=True)
+        _LOGGER.error("Unexpected error setting up Ksenia Lares: %s", err, exc_info=True)
         raise ConfigEntryNotReady(f"Failed to setup Lares device: {err}") from err
 
     unsub_options_update_listener = entry.add_update_listener(options_update_listener)
