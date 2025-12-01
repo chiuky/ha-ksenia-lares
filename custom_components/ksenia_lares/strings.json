@@ -6,7 +6,19 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "scan_interval": "Main scan interval (seconds)",
+          "scan_interval_zones": "Zones update interval (seconds)",
+          "scan_interval_partitions": "Partitions update interval (seconds)",
+          "scan_interval_temperatures": "Temperatures update interval (seconds)",
+          "scan_interval_outputs": "Outputs update interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "Main polling interval for the coordinator",
+          "scan_interval_zones": "How often to update zone sensors (1-300 seconds)",
+          "scan_interval_partitions": "How often to update partition sensors (1-300 seconds)",
+          "scan_interval_temperatures": "How often to update temperature sensors (10-3600 seconds)",
+          "scan_interval_outputs": "How often to update output switches (1-300 seconds)"
         }
       }
     },
@@ -22,9 +34,13 @@
   "options": {
     "step": {
       "init": {
-        "description": "Link different alarm states to partition and scenarios.",
+        "description": "Link different alarm states to partition and scenarios. Configure update intervals.",
         "data": {
           "pin": "PIN",
+          "scan_interval_zones": "Zones update interval (seconds)",
+          "scan_interval_partitions": "Partitions update interval (seconds)",
+          "scan_interval_temperatures": "Temperatures update interval (seconds)",
+          "scan_interval_outputs": "Outputs update interval (seconds)",
           "scenario_disarm": "Disarm scenario",
           "partition_away": "Away partitions",
           "scenario_away": "Away scenario",
@@ -35,6 +51,10 @@
         },
         "data_description": {
           "pin": "PIN to use for zone/partition bypass",
+          "scan_interval_zones": "How often to update zone sensors (1-300 seconds)",
+          "scan_interval_partitions": "How often to update partition sensors (1-300 seconds)",
+          "scan_interval_temperatures": "How often to update temperature sensors (10-3600 seconds)",
+          "scan_interval_outputs": "How often to update output switches (1-300 seconds)",
           "scenario_disarm": "Select the scenario to activate to disarm",
           "partition_away": "Select all partitions that need to armed for away state",
           "scenario_away": "Select the scenario to activate to arm away",

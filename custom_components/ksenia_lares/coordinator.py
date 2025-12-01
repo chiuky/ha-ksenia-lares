@@ -1,7 +1,7 @@
 """The Ksenia Lares data update coordinator."""
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from async_timeout import timeout
@@ -25,7 +25,14 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinate for data updates from Ksenia Lares."""
 
     def __init__(
-        self, hass: HomeAssistant, client: LaresBase, scan_interval: int
+        self,
+        hass: HomeAssistant,
+        client: LaresBase,
+        scan_interval: int,
+        scan_interval_zones: int,
+        scan_interval_partitions: int,
+        scan_interval_temperatures: int,
+        scan_interval_outputs: int,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -35,6 +42,22 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=scan_interval),
         )
         self.client = client
+        self._scan_interval_zones = scan_interval_zones
+        self._scan_interval_partitions = scan_interval_partitions
+        self._scan_interval_temperatures = scan_interval_temperatures
+        self._scan_interval_outputs = scan_interval_outputs
+
+        # Track last update times
+        self._last_zones_update = None
+        self._last_partitions_update = None
+        self._last_temperatures_update = None
+        self._last_outputs_update = None
+
+    def _should_update(self, last_update: datetime | None, interval: int) -> bool:
+        """Check if data should be updated based on interval."""
+        if last_update is None:
+            return True
+        return (datetime.now() - last_update).total_seconds() >= interval
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Ksenia Lares client."""
@@ -42,10 +65,41 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
             async with timeout(DEFAULT_TIMEOUT):
                 _LOGGER.debug("Fetching data from Lares device")
 
-                zones = await self.client.zones()
-                partitions = await self.client.partitions()
-                temperatures = await self.client.temperatures()
-                outputs = await self.client.outputs()
+                # Update zones if interval passed
+                zones = None
+                if self._should_update(self._last_zones_update, self._scan_interval_zones):
+                    zones = await self.client.zones()
+                    self._last_zones_update = datetime.now()
+                    _LOGGER.debug("Updated zones data")
+                elif self.data and DATA_ZONES in self.data:
+                    zones = self.data[DATA_ZONES]
+
+                # Update partitions if interval passed
+                partitions = None
+                if self._should_update(self._last_partitions_update, self._scan_interval_partitions):
+                    partitions = await self.client.partitions()
+                    self._last_partitions_update = datetime.now()
+                    _LOGGER.debug("Updated partitions data")
+                elif self.data and DATA_PARTITIONS in self.data:
+                    partitions = self.data[DATA_PARTITIONS]
+
+                # Update temperatures if interval passed
+                temperatures = None
+                if self._should_update(self._last_temperatures_update, self._scan_interval_temperatures):
+                    temperatures = await self.client.temperatures()
+                    self._last_temperatures_update = datetime.now()
+                    _LOGGER.debug("Updated temperatures data")
+                elif self.data and DATA_TEMPERATURES in self.data:
+                    temperatures = self.data[DATA_TEMPERATURES]
+
+                # Update outputs if interval passed
+                outputs = None
+                if self._should_update(self._last_outputs_update, self._scan_interval_outputs):
+                    outputs = await self.client.outputs()
+                    self._last_outputs_update = datetime.now()
+                    _LOGGER.debug("Updated outputs data")
+                elif self.data and DATA_OUTPUTS in self.data:
+                    outputs = self.data[DATA_OUTPUTS]
 
                 # Validate that we got some data
                 if zones is None and partitions is None:

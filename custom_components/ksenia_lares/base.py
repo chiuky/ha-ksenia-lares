@@ -26,7 +26,7 @@ class LaresBase:
         self._auth = aiohttp.BasicAuth(username, password)
         self._ip = host
         self._port = port
-        self._host = f"http://{host}:{self._port}"
+        self._url = f"http://{host}:{self._port}"
         self._model = None
         self._zone_descriptions = None
         self._partition_descriptions = None
@@ -40,7 +40,7 @@ class LaresBase:
         response = await self.get("info/generalInfo.xml")
 
         if response is None:
-            _LOGGER.warning("Failed to retrieve device info from %s", self._host)
+            _LOGGER.warning("Failed to retrieve device info from %s", self._url)
             return None
 
         try:
@@ -77,7 +77,7 @@ class LaresBase:
             "manufacturer": MANUFACTURER,
             "model": device_info["name"],
             "sw_version": f'{device_info["version"]}.{device_info["revision"]}.{device_info["build"]}',
-            "configuration_url": self._host,
+            "configuration_url": self._url,
         }
 
         mac = device_info["mac"]
@@ -346,7 +346,7 @@ class LaresBase:
 
     async def get(self, path: str) -> etree._Element | None:
         """Get method."""
-        url = f"{self._host}/xml/{path}"
+        url = f"{self._url}/xml/{path}"
 
         try:
             async with (
@@ -370,31 +370,31 @@ class LaresBase:
         except aiohttp.ClientConnectorError as conn_err:
             _LOGGER.warning(
                 "Connection error to %s: %s - Check device availability",
-                self._host,
+                self._url,
                 str(conn_err),
             )
         except aiohttp.ClientError as client_err:
-            _LOGGER.warning("Client error accessing %s: %s", self._host, str(client_err))
+            _LOGGER.warning("Client error accessing %s: %s", self._url, str(client_err))
         except etree.XMLSyntaxError as xml_err:
             _LOGGER.error(
                 "XML parsing error from %s: %s - Device may have returned invalid data",
-                self._host,
+                self._url,
                 str(xml_err),
             )
         except (OSError, TimeoutError) as err:
             _LOGGER.warning(
                 "Network timeout or OS error accessing %s: %s",
-                self._host,
+                self._url,
                 str(err),
             )
         except ValueError as err:
             _LOGGER.error(
                 "Invalid response data from %s: %s",
-                self._host,
+                self._url,
                 str(err),
             )
         except Exception as err:
             _LOGGER.exception(
-                "Unexpected error accessing %s: %s", self._host, str(err)
+                "Unexpected error accessing %s: %s", self._url, str(err)
             )
         return None

@@ -21,10 +21,18 @@ from .const import (
     CONF_PARTITION_HOME,
     CONF_PARTITION_NIGHT,
     CONF_PIN,
+    CONF_SCAN_INTERVAL_OUTPUTS,
+    CONF_SCAN_INTERVAL_PARTITIONS,
+    CONF_SCAN_INTERVAL_TEMPERATURES,
+    CONF_SCAN_INTERVAL_ZONES,
     CONF_SCENARIO_AWAY,
     CONF_SCENARIO_DISARM,
     CONF_SCENARIO_HOME,
     CONF_SCENARIO_NIGHT,
+    DEFAULT_SCAN_INTERVAL_OUTPUTS,
+    DEFAULT_SCAN_INTERVAL_PARTITIONS,
+    DEFAULT_SCAN_INTERVAL_TEMPERATURES,
+    DEFAULT_SCAN_INTERVAL_ZONES,
     DOMAIN,
 )
 
@@ -37,6 +45,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("username"): str,
         vol.Required("password"): str,
         vol.Required("scan_interval", default=10): int,
+        vol.Optional(CONF_SCAN_INTERVAL_ZONES, default=DEFAULT_SCAN_INTERVAL_ZONES): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=300)
+        ),
+        vol.Optional(CONF_SCAN_INTERVAL_PARTITIONS, default=DEFAULT_SCAN_INTERVAL_PARTITIONS): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=300)
+        ),
+        vol.Optional(CONF_SCAN_INTERVAL_TEMPERATURES, default=DEFAULT_SCAN_INTERVAL_TEMPERATURES): vol.All(
+            vol.Coerce(int), vol.Range(min=10, max=3600)
+        ),
+        vol.Optional(CONF_SCAN_INTERVAL_OUTPUTS, default=DEFAULT_SCAN_INTERVAL_OUTPUTS): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=300)
+        ),
     }
 )
 
@@ -60,7 +80,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ksenia Lares Alarm."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback
@@ -122,6 +142,34 @@ class LaresOptionsFlowHandler(OptionsFlow):
         scenarios_with_empty = ["", *scenarios]
         options = {
             vol.Optional(CONF_PIN): str,
+            vol.Optional(
+                CONF_SCAN_INTERVAL_ZONES,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL_ZONES,
+                    self.config_entry.data.get(CONF_SCAN_INTERVAL_ZONES, DEFAULT_SCAN_INTERVAL_ZONES)
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
+            vol.Optional(
+                CONF_SCAN_INTERVAL_PARTITIONS,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL_PARTITIONS,
+                    self.config_entry.data.get(CONF_SCAN_INTERVAL_PARTITIONS, DEFAULT_SCAN_INTERVAL_PARTITIONS)
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
+            vol.Optional(
+                CONF_SCAN_INTERVAL_TEMPERATURES,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL_TEMPERATURES,
+                    self.config_entry.data.get(CONF_SCAN_INTERVAL_TEMPERATURES, DEFAULT_SCAN_INTERVAL_TEMPERATURES)
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
+            vol.Optional(
+                CONF_SCAN_INTERVAL_OUTPUTS,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL_OUTPUTS,
+                    self.config_entry.data.get(CONF_SCAN_INTERVAL_OUTPUTS, DEFAULT_SCAN_INTERVAL_OUTPUTS)
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
             vol.Required(
                 CONF_SCENARIO_DISARM,
                 default=self.config_entry.options.get(CONF_SCENARIO_DISARM, ""),
