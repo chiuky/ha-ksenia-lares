@@ -1,0 +1,217 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo è già configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto",
+            "name_exists": "Esiste già un pannello con questo nome"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta",
+                    "username": "Nome utente",
+                    "password": "Password",
+                    "automation_pin": "PIN automazione (controllo uscite)",
+                    "scan_interval": "Intervallo di scansione principale (secondi)"
+                },
+                "data_description": {
+                    "automation_pin": "PIN utilizzato per attivare/disattivare le uscite (opzionale)",
+                    "scan_interval": "Intervallo di polling principale per il coordinatore"
+                }
+            },
+            "scan_intervals": {
+                "title": "Intervalli di Scansione",
+                "description": "Configura gli intervalli di aggiornamento per le diverse risorse.",
+                "data": {
+                    "scan_interval_zones": "Intervallo aggiornamento zone (secondi)",
+                    "scan_interval_partitions": "Intervallo aggiornamento partizioni (secondi)",
+                    "scan_interval_temperatures": "Intervallo aggiornamento temperature (secondi)",
+                    "scan_interval_outputs": "Intervallo aggiornamento uscite (secondi)"
+                },
+                "data_description": {
+                    "scan_interval_zones": "Frequenza di aggiornamento dei sensori di zona (1-300 secondi)",
+                    "scan_interval_partitions": "Frequenza di aggiornamento dei sensori di partizione (1-300 secondi)",
+                    "scan_interval_temperatures": "Frequenza di aggiornamento dei sensori di temperatura (10-3600 secondi)",
+                    "scan_interval_outputs": "Frequenza di aggiornamento degli interruttori di uscita (1-300 secondi)"
+                }
+            },
+            "first_panel": {
+                "title": "Primo Pannello Allarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nome pannello",
+                    "panel_pin": "PIN pannello",
+                    "scenario_disarm": "Scenario disinserimento",
+                    "scenario_away": "Scenario totale",
+                    "scenario_night": "Scenario notte (opzionale)",
+                    "partition_away": "Partizioni totale",
+                    "partition_night": "Partizioni notte"
+                },
+                "data_description": {
+                    "panel_name": "Nome univoco per questo pannello allarme.",
+                    "panel_pin": "PIN utilizzato internamente solo per questo pannello (mai mostrato).",
+                    "scenario_disarm": "Scenario utilizzato per il disinserimento.",
+                    "scenario_away": "Scenario utilizzato per l'inserimento totale.",
+                    "scenario_night": "Scenario utilizzato per l'inserimento notte.",
+                    "partition_away": "Partizioni che definiscono lo stato inserito totale.",
+                    "partition_night": "Partizioni che definiscono lo stato inserito notte."
+                }
+            },
+            "panels": {
+                "title": "Gestione Pannelli Allarme",
+                "description": "Pannelli attuali:\n{panel_list}\n\nAggiungi altri pannelli o termina la configurazione.",
+                "data": {
+                    "action": "Azione",
+                    "add": "Aggiungi",
+                    "edit": "Modifica",
+                    "delete": "Elimina",
+                    "done": "Termina",
+                    "panel_to_edit": "Pannello da modificare",
+                    "panel_to_delete": "Pannello da eliminare",
+                    "no_panels": "Nessun pannello configurato"
+                }
+            },
+            "add_panel": {
+                "title": "Aggiungi Pannello Allarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nome pannello",
+                    "panel_pin": "PIN pannello",
+                    "scenario_disarm": "Scenario disinserimento",
+                    "scenario_away": "Scenario totale",
+                    "scenario_night": "Scenario notte (opzionale)",
+                    "partition_away": "Partizioni totale",
+                    "partition_night": "Partizioni notte"
+                },
+                "data_description": {
+                    "panel_name": "Nome univoco per questo pannello allarme.",
+                    "panel_pin": "PIN utilizzato internamente solo per questo pannello (mai mostrato).",
+                    "scenario_disarm": "Scenario utilizzato per il disinserimento.",
+                    "scenario_away": "Scenario utilizzato per l'inserimento totale.",
+                    "scenario_night": "Scenario utilizzato per l'inserimento notte.",
+                    "partition_away": "Partizioni che definiscono lo stato inserito totale.",
+                    "partition_night": "Partizioni che definiscono lo stato inserito notte."
+                }
+            },
+            "edit_panel": {
+                "title": "Modifica Pannello Allarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nome pannello (fisso)",
+                    "panel_pin": "Nuovo PIN (opzionale)",
+                    "scenario_disarm": "Scenario disinserimento",
+                    "scenario_away": "Scenario totale",
+                    "scenario_night": "Scenario notte (opzionale)",
+                    "partition_away": "Partizioni totale",
+                    "partition_night": "Partizioni notte"
+                },
+                "data_description": {
+                    "panel_pin": "Lascia vuoto per mantenere il PIN esistente.",
+                    "scenario_disarm": "Scenario utilizzato per il disinserimento.",
+                    "scenario_away": "Scenario utilizzato per l'inserimento totale.",
+                    "scenario_night": "Scenario utilizzato per l'inserimento notte.",
+                    "partition_away": "Partizioni che definiscono lo stato inserito totale.",
+                    "partition_night": "Partizioni che definiscono lo stato inserito notte."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Intervalli di Scansione",
+                "description": "Configura gli intervalli di aggiornamento per sensori e dispositivi.",
+                "data": {
+                    "scan_interval_zones": "Intervallo aggiornamento zone (secondi)",
+                    "scan_interval_partitions": "Intervallo aggiornamento partizioni (secondi)",
+                    "scan_interval_temperatures": "Intervallo aggiornamento temperature (secondi)",
+                    "scan_interval_outputs": "Intervallo aggiornamento uscite (secondi)",
+                    "scenario_disarm": "Scenario disinserimento",
+                    "partition_away": "Partizioni totale",
+                    "scenario_away": "Scenario totale",
+                    "partition_night": "Partizioni notte",
+                    "scenario_night": "Scenario notte"
+                },
+                "data_description": {
+                    "scan_interval_zones": "Frequenza di aggiornamento dei sensori di zona (1-300 secondi)",
+                    "scan_interval_partitions": "Frequenza di aggiornamento dei sensori di partizione (1-300 secondi)",
+                    "scan_interval_temperatures": "Frequenza di aggiornamento dei sensori di temperatura (10-3600 secondi)",
+                    "scan_interval_outputs": "Frequenza di aggiornamento degli interruttori di uscita (1-300 secondi)",
+                    "scenario_disarm": "Seleziona lo scenario da attivare per disinserire",
+                    "partition_away": "Seleziona tutte le partizioni che devono essere inserite per lo stato totale",
+                    "scenario_away": "Seleziona lo scenario da attivare per l'inserimento totale",
+                    "partition_night": "Seleziona tutte le partizioni che devono essere inserite per lo stato notte",
+                    "scenario_night": "Seleziona lo scenario da attivare per l'inserimento notte"
+                }
+            },
+            "panels": {
+                "title": "Gestione Pannelli Allarme",
+                "description": "Pannelli attuali:\n{panel_list}\n\nAggiungi, modifica, elimina pannelli o termina.",
+                "data": {
+                    "action": "Azione",
+                    "add": "Aggiungi",
+                    "edit": "Modifica",
+                    "delete": "Elimina",
+                    "done": "Termina",
+                    "panel_to_edit": "Pannello da modificare",
+                    "panel_to_delete": "Pannello da eliminare"
+                }
+            },
+            "add_panel": {
+                "title": "Aggiungi Pannello Allarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nome pannello",
+                    "panel_pin": "PIN pannello",
+                    "scenario_disarm": "Scenario disinserimento",
+                    "scenario_away": "Scenario totale",
+                    "scenario_night": "Scenario notte (opzionale)",
+                    "partition_away": "Partizioni totale",
+                    "partition_night": "Partizioni notte"
+                },
+                "data_description": {
+                    "panel_name": "Nome univoco per questo pannello allarme.",
+                    "panel_pin": "PIN utilizzato internamente solo per questo pannello (mai mostrato).",
+                    "scenario_disarm": "Scenario utilizzato per il disinserimento.",
+                    "scenario_away": "Scenario utilizzato per l'inserimento totale.",
+                    "scenario_night": "Scenario utilizzato per l'inserimento notte.",
+                    "partition_away": "Partizioni che definiscono lo stato inserito totale.",
+                    "partition_night": "Partizioni che definiscono lo stato inserito notte."
+                }
+            },
+            "edit_panel": {
+                "title": "Modifica Pannello Allarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nome pannello (fisso)",
+                    "panel_pin": "Nuovo PIN (opzionale)",
+                    "scenario_disarm": "Scenario disinserimento",
+                    "scenario_away": "Scenario totale",
+                    "scenario_night": "Scenario notte (opzionale)",
+                    "partition_away": "Partizioni totale",
+                    "partition_night": "Partizioni notte"
+                },
+                "data_description": {
+                    "panel_pin": "Lascia vuoto per mantenere il PIN esistente.",
+                    "scenario_disarm": "Scenario utilizzato per il disinserimento.",
+                    "scenario_away": "Scenario utilizzato per l'inserimento totale.",
+                    "scenario_night": "Scenario utilizzato per l'inserimento notte.",
+                    "partition_away": "Partizioni che definiscono lo stato inserito totale.",
+                    "partition_night": "Partizioni che definiscono lo stato inserito notte."
+                }
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "bypass": {
+                "name": "Esclusione"
+            }
+        }
+    }
+}

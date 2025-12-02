@@ -1,0 +1,217 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est déjà configuré"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter",
+            "invalid_auth": "Authentification invalide",
+            "unknown": "Erreur inattendue",
+            "name_exists": "Un panneau avec ce nom existe déjà"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hôte",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur",
+                    "password": "Mot de passe",
+                    "automation_pin": "Code PIN d'automation (contrôle sorties)",
+                    "scan_interval": "Intervalle de scan principal (secondes)"
+                },
+                "data_description": {
+                    "automation_pin": "Code PIN utilisé pour activer/désactiver les sorties (optionnel)",
+                    "scan_interval": "Intervalle d'interrogation principal pour le coordinateur"
+                }
+            },
+            "scan_intervals": {
+                "title": "Intervalles de Scan",
+                "description": "Configurez les intervalles de mise à jour pour les différentes ressources.",
+                "data": {
+                    "scan_interval_zones": "Intervalle de mise à jour zones (secondes)",
+                    "scan_interval_partitions": "Intervalle de mise à jour partitions (secondes)",
+                    "scan_interval_temperatures": "Intervalle de mise à jour températures (secondes)",
+                    "scan_interval_outputs": "Intervalle de mise à jour sorties (secondes)"
+                },
+                "data_description": {
+                    "scan_interval_zones": "Fréquence de mise à jour des capteurs de zone (1-300 secondes)",
+                    "scan_interval_partitions": "Fréquence de mise à jour des capteurs de partition (1-300 secondes)",
+                    "scan_interval_temperatures": "Fréquence de mise à jour des capteurs de température (10-3600 secondes)",
+                    "scan_interval_outputs": "Fréquence de mise à jour des interrupteurs de sortie (1-300 secondes)"
+                }
+            },
+            "first_panel": {
+                "title": "Premier Panneau d'Alarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nom du panneau",
+                    "panel_pin": "Code PIN du panneau",
+                    "scenario_disarm": "Scénario désarmement",
+                    "scenario_away": "Scénario absent",
+                    "scenario_night": "Scénario nuit (optionnel)",
+                    "partition_away": "Partitions absent",
+                    "partition_night": "Partitions nuit"
+                },
+                "data_description": {
+                    "panel_name": "Nom unique pour ce panneau d'alarme.",
+                    "panel_pin": "Code PIN utilisé en interne uniquement pour ce panneau (jamais affiché).",
+                    "scenario_disarm": "Scénario utilisé pour le désarmement.",
+                    "scenario_away": "Scénario utilisé pour l'armement absent.",
+                    "scenario_night": "Scénario utilisé pour l'armement nuit.",
+                    "partition_away": "Partitions qui définissent l'état armé absent.",
+                    "partition_night": "Partitions qui définissent l'état armé nuit."
+                }
+            },
+            "panels": {
+                "title": "Gestion des Panneaux d'Alarme",
+                "description": "Panneaux actuels:\n{panel_list}\n\nAjoutez d'autres panneaux ou terminez la configuration.",
+                "data": {
+                    "action": "Action",
+                    "add": "Ajouter",
+                    "edit": "Modifier",
+                    "delete": "Supprimer",
+                    "done": "Terminer",
+                    "panel_to_edit": "Panneau à modifier",
+                    "panel_to_delete": "Panneau à supprimer",
+                    "no_panels": "Aucun panneau configuré"
+                }
+            },
+            "add_panel": {
+                "title": "Ajouter Panneau d'Alarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nom du panneau",
+                    "panel_pin": "Code PIN du panneau",
+                    "scenario_disarm": "Scénario désarmement",
+                    "scenario_away": "Scénario absent",
+                    "scenario_night": "Scénario nuit (optionnel)",
+                    "partition_away": "Partitions absent",
+                    "partition_night": "Partitions nuit"
+                },
+                "data_description": {
+                    "panel_name": "Nom unique pour ce panneau d'alarme.",
+                    "panel_pin": "Code PIN utilisé en interne uniquement pour ce panneau (jamais affiché).",
+                    "scenario_disarm": "Scénario utilisé pour le désarmement.",
+                    "scenario_away": "Scénario utilisé pour l'armement absent.",
+                    "scenario_night": "Scénario utilisé pour l'armement nuit.",
+                    "partition_away": "Partitions qui définissent l'état armé absent.",
+                    "partition_night": "Partitions qui définissent l'état armé nuit."
+                }
+            },
+            "edit_panel": {
+                "title": "Modifier Panneau d'Alarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nom du panneau (fixe)",
+                    "panel_pin": "Nouveau code PIN (optionnel)",
+                    "scenario_disarm": "Scénario désarmement",
+                    "scenario_away": "Scénario absent",
+                    "scenario_night": "Scénario nuit (optionnel)",
+                    "partition_away": "Partitions absent",
+                    "partition_night": "Partitions nuit"
+                },
+                "data_description": {
+                    "panel_pin": "Laissez vide pour conserver le code PIN existant.",
+                    "scenario_disarm": "Scénario utilisé pour le désarmement.",
+                    "scenario_away": "Scénario utilisé pour l'armement absent.",
+                    "scenario_night": "Scénario utilisé pour l'armement nuit.",
+                    "partition_away": "Partitions qui définissent l'état armé absent.",
+                    "partition_night": "Partitions qui définissent l'état armé nuit."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Intervalles de Scan",
+                "description": "Configurez les intervalles de mise à jour pour les capteurs et appareils.",
+                "data": {
+                    "scan_interval_zones": "Intervalle de mise à jour zones (secondes)",
+                    "scan_interval_partitions": "Intervalle de mise à jour partitions (secondes)",
+                    "scan_interval_temperatures": "Intervalle de mise à jour températures (secondes)",
+                    "scan_interval_outputs": "Intervalle de mise à jour sorties (secondes)",
+                    "scenario_disarm": "Scénario désarmement",
+                    "partition_away": "Partitions absent",
+                    "scenario_away": "Scénario absent",
+                    "partition_night": "Partitions nuit",
+                    "scenario_night": "Scénario nuit"
+                },
+                "data_description": {
+                    "scan_interval_zones": "Fréquence de mise à jour des capteurs de zone (1-300 secondes)",
+                    "scan_interval_partitions": "Fréquence de mise à jour des capteurs de partition (1-300 secondes)",
+                    "scan_interval_temperatures": "Fréquence de mise à jour des capteurs de température (10-3600 secondes)",
+                    "scan_interval_outputs": "Fréquence de mise à jour des interrupteurs de sortie (1-300 secondes)",
+                    "scenario_disarm": "Sélectionnez le scénario à activer pour désarmer",
+                    "partition_away": "Sélectionnez toutes les partitions qui doivent être armées pour l'état absent",
+                    "scenario_away": "Sélectionnez le scénario à activer pour l'armement absent",
+                    "partition_night": "Sélectionnez toutes les partitions qui doivent être armées pour l'état nuit",
+                    "scenario_night": "Sélectionnez le scénario à activer pour l'armement nuit"
+                }
+            },
+            "panels": {
+                "title": "Gestion des Panneaux d'Alarme",
+                "description": "Panneaux actuels:\n{panel_list}\n\nAjoutez, modifiez, supprimez des panneaux ou terminez.",
+                "data": {
+                    "action": "Action",
+                    "add": "Ajouter",
+                    "edit": "Modifier",
+                    "delete": "Supprimer",
+                    "done": "Terminer",
+                    "panel_to_edit": "Panneau à modifier",
+                    "panel_to_delete": "Panneau à supprimer"
+                }
+            },
+            "add_panel": {
+                "title": "Ajouter Panneau d'Alarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nom du panneau",
+                    "panel_pin": "Code PIN du panneau",
+                    "scenario_disarm": "Scénario désarmement",
+                    "scenario_away": "Scénario absent",
+                    "scenario_night": "Scénario nuit (optionnel)",
+                    "partition_away": "Partitions absent",
+                    "partition_night": "Partitions nuit"
+                },
+                "data_description": {
+                    "panel_name": "Nom unique pour ce panneau d'alarme.",
+                    "panel_pin": "Code PIN utilisé en interne uniquement pour ce panneau (jamais affiché).",
+                    "scenario_disarm": "Scénario utilisé pour le désarmement.",
+                    "scenario_away": "Scénario utilisé pour l'armement absent.",
+                    "scenario_night": "Scénario utilisé pour l'armement nuit.",
+                    "partition_away": "Partitions qui définissent l'état armé absent.",
+                    "partition_night": "Partitions qui définissent l'état armé nuit."
+                }
+            },
+            "edit_panel": {
+                "title": "Modifier Panneau d'Alarme",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Nom du panneau (fixe)",
+                    "panel_pin": "Nouveau code PIN (optionnel)",
+                    "scenario_disarm": "Scénario désarmement",
+                    "scenario_away": "Scénario absent",
+                    "scenario_night": "Scénario nuit (optionnel)",
+                    "partition_away": "Partitions absent",
+                    "partition_night": "Partitions nuit"
+                },
+                "data_description": {
+                    "panel_pin": "Laissez vide pour conserver le code PIN existant.",
+                    "scenario_disarm": "Scénario utilisé pour le désarmement.",
+                    "scenario_away": "Scénario utilisé pour l'armement absent.",
+                    "scenario_night": "Scénario utilisé pour l'armement nuit.",
+                    "partition_away": "Partitions qui définissent l'état armé absent.",
+                    "partition_night": "Partitions qui définissent l'état armé nuit."
+                }
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "bypass": {
+                "name": "Bypass"
+            }
+        }
+    }
+}
