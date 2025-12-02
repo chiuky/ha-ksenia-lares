@@ -22,7 +22,17 @@ from .const import (
     DEFAULT_SCAN_INTERVAL_TEMPERATURES,
     DEFAULT_SCAN_INTERVAL_ZONES,
     DOMAIN,
+    CONF_ALARM_PANELS,
+    CONF_ALARM_PANEL_NAME,
+    CONF_ALARM_PANEL_PIN,
+    CONF_PARTITION_AWAY,
+    CONF_PARTITION_NIGHT,
+    CONF_SCENARIO_DISARM,
+    CONF_SCENARIO_AWAY,
+    CONF_SCENARIO_NIGHT,
+    CONF_PIN,
 )
+
 from .coordinator import LaresDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +47,8 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ksenia Lares Alarm from a config entry."""
-    _LOGGER.info("Setting up Ksenia Lares integration for %s", entry.data.get("host"))
+    _LOGGER.info("Setting up Ksenia Lares integration for %s",
+                 entry.data.get("host"))
 
     try:
         client = LaresBase(entry.data)
@@ -46,19 +57,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Get scan intervals from options or data with fallback to defaults
         scan_interval_zones = entry.options.get(
             CONF_SCAN_INTERVAL_ZONES,
-            entry.data.get(CONF_SCAN_INTERVAL_ZONES, DEFAULT_SCAN_INTERVAL_ZONES)
+            entry.data.get(CONF_SCAN_INTERVAL_ZONES,
+                           DEFAULT_SCAN_INTERVAL_ZONES)
         )
         scan_interval_partitions = entry.options.get(
             CONF_SCAN_INTERVAL_PARTITIONS,
-            entry.data.get(CONF_SCAN_INTERVAL_PARTITIONS, DEFAULT_SCAN_INTERVAL_PARTITIONS)
+            entry.data.get(CONF_SCAN_INTERVAL_PARTITIONS,
+                           DEFAULT_SCAN_INTERVAL_PARTITIONS)
         )
         scan_interval_temperatures = entry.options.get(
             CONF_SCAN_INTERVAL_TEMPERATURES,
-            entry.data.get(CONF_SCAN_INTERVAL_TEMPERATURES, DEFAULT_SCAN_INTERVAL_TEMPERATURES)
+            entry.data.get(CONF_SCAN_INTERVAL_TEMPERATURES,
+                           DEFAULT_SCAN_INTERVAL_TEMPERATURES)
         )
         scan_interval_outputs = entry.options.get(
             CONF_SCAN_INTERVAL_OUTPUTS,
-            entry.data.get(CONF_SCAN_INTERVAL_OUTPUTS, DEFAULT_SCAN_INTERVAL_OUTPUTS)
+            entry.data.get(CONF_SCAN_INTERVAL_OUTPUTS,
+                           DEFAULT_SCAN_INTERVAL_OUTPUTS)
         )
 
         coordinator = LaresDataUpdateCoordinator(
@@ -74,10 +89,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Preload device info to verify connection
         device_info = await client.device_info()
         if device_info is None:
-            _LOGGER.error("Failed to retrieve device info from %s", entry.data.get("host"))
+            _LOGGER.error("Failed to retrieve device info from %s",
+                          entry.data.get("host"))
             raise ConfigEntryNotReady("Unable to connect to Lares device")
 
-        _LOGGER.debug("Successfully connected to Lares device: %s", device_info.get("name"))
+        _LOGGER.debug("Successfully connected to Lares device: %s",
+                      device_info.get("name"))
 
     except (KeyError, ValueError, TypeError) as err:
         _LOGGER.error("Invalid configuration data: %s", err, exc_info=True)
@@ -86,10 +103,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Network error connecting to Lares device: %s", err)
         raise ConfigEntryNotReady(f"Network error: {err}") from err
     except Exception as err:
-        _LOGGER.error("Unexpected error setting up Ksenia Lares: %s", err, exc_info=True)
-        raise ConfigEntryNotReady(f"Failed to setup Lares device: {err}") from err
+        _LOGGER.error(
+            "Unexpected error setting up Ksenia Lares: %s", err, exc_info=True)
+        raise ConfigEntryNotReady(
+            f"Failed to setup Lares device: {err}") from err
 
-    unsub_options_update_listener = entry.add_update_listener(options_update_listener)
+    unsub_options_update_listener = entry.add_update_listener(
+        options_update_listener)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
@@ -114,7 +134,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(
         await asyncio.gather(
             *(
-                hass.config_entries.async_forward_entry_unload(entry, component)
+                hass.config_entries.async_forward_entry_unload(
+                    entry, component)
                 for component in PLATFORMS
             )
         )
@@ -131,29 +152,61 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.info("Migrating Ksenia Lares config entry from version %s", config_entry.version)
+    """Migrate old entry to support multi alarm panels."""
+    _LOGGER.info(
+        "Migrating Ksenia Lares config entry from version %s", config_entry.version
+    )
+
+    updated_data = {**config_entry.data}
+    updated_options = {**config_entry.options}
 
     if config_entry.version == 1:
-        new = {**config_entry.data}
-        new["port"] = 80
-
-        hass.config_entries.async_update_entry(config_entry, data=new, version=2)
+        # Ensure port default
+        updated_data.setdefault("port", 80)
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(
+            config_entry, data=updated_data, options=updated_options, version=2
+        )
         _LOGGER.info("Migration to version 2 successful")
 
     if config_entry.version == 2:
-        new = {**config_entry.data}
-        # Add default scan intervals if not present
-        if CONF_SCAN_INTERVAL_ZONES not in new:
-            new[CONF_SCAN_INTERVAL_ZONES] = DEFAULT_SCAN_INTERVAL_ZONES
-        if CONF_SCAN_INTERVAL_PARTITIONS not in new:
-            new[CONF_SCAN_INTERVAL_PARTITIONS] = DEFAULT_SCAN_INTERVAL_PARTITIONS
-        if CONF_SCAN_INTERVAL_TEMPERATURES not in new:
-            new[CONF_SCAN_INTERVAL_TEMPERATURES] = DEFAULT_SCAN_INTERVAL_TEMPERATURES
-        if CONF_SCAN_INTERVAL_OUTPUTS not in new:
-            new[CONF_SCAN_INTERVAL_OUTPUTS] = DEFAULT_SCAN_INTERVAL_OUTPUTS
-
-        hass.config_entries.async_update_entry(config_entry, data=new, version=3)
+        # Ensure scan intervals
+        updated_data.setdefault(CONF_SCAN_INTERVAL_ZONES,
+                                DEFAULT_SCAN_INTERVAL_ZONES)
+        updated_data.setdefault(
+            CONF_SCAN_INTERVAL_PARTITIONS, DEFAULT_SCAN_INTERVAL_PARTITIONS
+        )
+        updated_data.setdefault(
+            CONF_SCAN_INTERVAL_TEMPERATURES, DEFAULT_SCAN_INTERVAL_TEMPERATURES
+        )
+        updated_data.setdefault(
+            CONF_SCAN_INTERVAL_OUTPUTS, DEFAULT_SCAN_INTERVAL_OUTPUTS)
+        config_entry.version = 3
+        hass.config_entries.async_update_entry(
+            config_entry, data=updated_data, options=updated_options, version=3
+        )
         _LOGGER.info("Migration to version 3 successful")
+
+    # Introduce version 4: convert single panel settings into alarm_panels list
+    if config_entry.version == 3:
+
+        if CONF_ALARM_PANELS not in updated_options:
+            panel = {
+                CONF_ALARM_PANEL_NAME: "Default",
+                CONF_ALARM_PANEL_PIN: updated_options.get(CONF_ALARM_PANEL_PIN)
+                or updated_options.get(CONF_PIN),
+                CONF_PARTITION_AWAY: updated_options.get(CONF_PARTITION_AWAY, []),
+                CONF_PARTITION_NIGHT: updated_options.get(CONF_PARTITION_NIGHT, []),
+                CONF_SCENARIO_DISARM: updated_options.get(CONF_SCENARIO_DISARM, ""),
+                CONF_SCENARIO_AWAY: updated_options.get(CONF_SCENARIO_AWAY, ""),
+                CONF_SCENARIO_NIGHT: updated_options.get(CONF_SCENARIO_NIGHT, ""),
+            }
+            updated_options[CONF_ALARM_PANELS] = [panel]
+
+        config_entry.version = 4
+        hass.config_entries.async_update_entry(
+            config_entry, data=updated_data, options=updated_options, version=4
+        )
+        _LOGGER.info("Migration to version 4 successful (multi panels)")
 
     return True

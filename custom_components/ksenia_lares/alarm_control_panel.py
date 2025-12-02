@@ -8,12 +8,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_PARTITION_AWAY,
-    CONF_PARTITION_HOME,
     CONF_PARTITION_NIGHT,
     CONF_SCENARIO_AWAY,
     CONF_SCENARIO_DISARM,
-    CONF_SCENARIO_HOME,
     CONF_SCENARIO_NIGHT,
+    CONF_ALARM_PANELS,
+    CONF_ALARM_PANEL_NAME,
     DATA_COORDINATOR,
     DOMAIN,
 )
@@ -34,27 +34,35 @@ async def async_setup_entry(
     partition_descriptions = await coordinator.client.partition_descriptions()
     scenario_descriptions = await coordinator.client.scenario_descriptions()
 
-    options = {
-        CONF_PARTITION_AWAY: config_entry.options.get(CONF_PARTITION_AWAY, []),
-        CONF_PARTITION_HOME: config_entry.options.get(CONF_PARTITION_HOME, []),
-        CONF_PARTITION_NIGHT: config_entry.options.get(CONF_PARTITION_NIGHT, []),
-        CONF_SCENARIO_NIGHT: config_entry.options.get(CONF_SCENARIO_NIGHT, []),
-        CONF_SCENARIO_HOME: config_entry.options.get(CONF_SCENARIO_HOME, []),
-        CONF_SCENARIO_AWAY: config_entry.options.get(CONF_SCENARIO_AWAY, []),
-        CONF_SCENARIO_DISARM: config_entry.options.get(CONF_SCENARIO_DISARM, []),
-    }
+    panels = config_entry.options.get(CONF_ALARM_PANELS)
+
+    # If no panels configured yet, fall back to single default panel (backward compatibility)
+    if not panels:
+        panels = [
+            {
+                CONF_ALARM_PANEL_NAME: "Default",
+                # No global PIN exposure; panel PIN will be required via options edit
+                CONF_PARTITION_AWAY: config_entry.options.get(CONF_PARTITION_AWAY, []),
+                CONF_PARTITION_NIGHT: config_entry.options.get(CONF_PARTITION_NIGHT, []),
+                CONF_SCENARIO_NIGHT: config_entry.options.get(CONF_SCENARIO_NIGHT, ""),
+                CONF_SCENARIO_AWAY: config_entry.options.get(CONF_SCENARIO_AWAY, ""),
+                CONF_SCENARIO_DISARM: config_entry.options.get(CONF_SCENARIO_DISARM, ""),
+            }
+        ]
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    async_add_entities(
-        [
+    entities = []
+    for panel in panels:
+        entities.append(
             LaresAlarmControlPanelEntity(
                 coordinator,
                 device_info,
                 partition_descriptions,
                 scenario_descriptions,
-                options,
+                panel,
             )
-        ]
-    )
+        )
+
+    async_add_entities(entities)

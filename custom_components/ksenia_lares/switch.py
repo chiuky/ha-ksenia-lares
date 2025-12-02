@@ -8,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_PIN,
+    CONF_AUTOMATION_PIN,
     DATA_COORDINATOR,
     DATA_OUTPUTS,
     DATA_ZONES,
@@ -46,7 +47,10 @@ async def async_setup_entry(
             _LOGGER.warning("No output descriptions available")
             output_descriptions = []
 
-        options = {CONF_PIN: config_entry.options.get(CONF_PIN)}
+        # Prefer the automation pin provided during initial setup; fallback to options pin
+        automation_pin = config_entry.data.get(CONF_AUTOMATION_PIN)
+        options = {
+            CONF_PIN: automation_pin if automation_pin else config_entry.options.get(CONF_PIN)}
 
         # Fetch initial data so we have data when entities subscribe
         await coordinator.async_refresh()
@@ -55,16 +59,19 @@ async def async_setup_entry(
         outputs = coordinator.data.get(DATA_OUTPUTS)
 
         if zones is None and outputs is None:
-            _LOGGER.warning("No zones or outputs data available, skipping switch setup")
+            _LOGGER.warning(
+                "No zones or outputs data available, skipping switch setup")
             return
     except (KeyError, AttributeError, TypeError) as err:
-        _LOGGER.error("Invalid data structure setting up switches: %s", err, exc_info=True)
+        _LOGGER.error(
+            "Invalid data structure setting up switches: %s", err, exc_info=True)
         return
     except (OSError, TimeoutError) as err:
         _LOGGER.error("Network error setting up switches: %s", err)
         return
     except Exception as err:
-        _LOGGER.error("Unexpected error setting up switches: %s", err, exc_info=True)
+        _LOGGER.error("Unexpected error setting up switches: %s",
+                      err, exc_info=True)
         return
 
     def _async_add_lares_bypass_switch() -> None:
@@ -80,9 +87,9 @@ async def async_setup_entry(
 
         if entities:
             _LOGGER.info("Adding %d switches (%d zones, %d outputs)",
-                        len(entities),
-                        len(zone_sensors),
-                        len(output_sensors))
+                         len(entities),
+                         len(zone_sensors),
+                         len(output_sensors))
             async_add_entities(entities)
         else:
             _LOGGER.info("No switches to add")
@@ -95,14 +102,16 @@ async def async_setup_entry(
             for idx, zone in enumerate(zones):
                 try:
                     if zone is not None and zone.get("status") != ZONE_STATUS_NOT_USED:
-                        description = zone_descriptions[idx] if idx < len(zone_descriptions) else f"Zone {idx}"
+                        description = zone_descriptions[idx] if idx < len(
+                            zone_descriptions) else f"Zone {idx}"
                         entities.append(
                             LaresBypassSwitchSensor(
                                 coordinator, idx, description, device_info, options
                             )
                         )
                 except (IndexError, KeyError) as err:
-                    _LOGGER.warning("Error creating zone switch %d: %s", idx, err)
+                    _LOGGER.warning(
+                        "Error creating zone switch %d: %s", idx, err)
                     continue
         return entities
 
@@ -114,14 +123,16 @@ async def async_setup_entry(
             for idx, output in enumerate(outputs):
                 try:
                     if output is not None and output.get("type") != ZONE_STATUS_NOT_USED:
-                        description = output_descriptions[idx] if idx < len(output_descriptions) else f"Output {idx}"
+                        description = output_descriptions[idx] if idx < len(
+                            output_descriptions) else f"Output {idx}"
                         entities.append(
                             LaresOutputSensor(
                                 coordinator, idx, description, device_info, options
                             )
                         )
                 except (IndexError, KeyError) as err:
-                    _LOGGER.warning("Error creating output switch %d: %s", idx, err)
+                    _LOGGER.warning(
+                        "Error creating output switch %d: %s", idx, err)
                     continue
         return entities
 

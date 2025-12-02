@@ -18,17 +18,17 @@ import homeassistant.helpers.config_validation as cv
 from .base import LaresBase
 from .const import (
     CONF_PARTITION_AWAY,
-    CONF_PARTITION_HOME,
     CONF_PARTITION_NIGHT,
-    CONF_PIN,
     CONF_SCAN_INTERVAL_OUTPUTS,
     CONF_SCAN_INTERVAL_PARTITIONS,
     CONF_SCAN_INTERVAL_TEMPERATURES,
     CONF_SCAN_INTERVAL_ZONES,
     CONF_SCENARIO_AWAY,
     CONF_SCENARIO_DISARM,
-    CONF_SCENARIO_HOME,
     CONF_SCENARIO_NIGHT,
+    CONF_ALARM_PANELS,
+    CONF_ALARM_PANEL_NAME,
+    CONF_ALARM_PANEL_PIN,
     DEFAULT_SCAN_INTERVAL_OUTPUTS,
     DEFAULT_SCAN_INTERVAL_PARTITIONS,
     DEFAULT_SCAN_INTERVAL_TEMPERATURES,
@@ -44,19 +44,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("port", default=80): int,
         vol.Required("username"): str,
         vol.Required("password"): str,
+        vol.Optional("automation_pin"): str,
         vol.Required("scan_interval", default=10): int,
-        vol.Optional(CONF_SCAN_INTERVAL_ZONES, default=DEFAULT_SCAN_INTERVAL_ZONES): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=300)
-        ),
-        vol.Optional(CONF_SCAN_INTERVAL_PARTITIONS, default=DEFAULT_SCAN_INTERVAL_PARTITIONS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=300)
-        ),
-        vol.Optional(CONF_SCAN_INTERVAL_TEMPERATURES, default=DEFAULT_SCAN_INTERVAL_TEMPERATURES): vol.All(
-            vol.Coerce(int), vol.Range(min=10, max=3600)
-        ),
-        vol.Optional(CONF_SCAN_INTERVAL_OUTPUTS, default=DEFAULT_SCAN_INTERVAL_OUTPUTS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=300)
-        ),
     }
 )
 
@@ -67,6 +56,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     client = LaresBase(data)
+    _ = hass  # mark hass as used to silence linter
 
     info = await client.info()
 
@@ -80,7 +70,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ksenia Lares Alarm."""
 
-    VERSION = 3
+    VERSION = 4
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._user_data: dict[str, Any] = {}
+        self._scan_options: dict[str, Any] = {}
+        self._panels: list[dict[str, Any]] = []
+        self._client: LaresBase | None = None
 
     @staticmethod
     @callback
@@ -90,8 +87,12 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return LaresOptionsFlowHandler(config_entry)
 
+    def is_matching(self, other_flow: str) -> bool:
+        """Satisfy abstract interface signature."""
+        return other_flow == DOMAIN
+
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the initial step: connection credentials."""
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -113,94 +114,563 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(str(info["id"]))
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=info["title"], data=user_input)
+            # Save connection data, proceed to scan intervals
+            self._user_data = user_input
+            self._client = LaresBase(user_input)
+            return await self.async_step_scan_intervals()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_scan_intervals(self, user_input=None) -> ConfigFlowResult:
+        """Configure scan intervals for different resources."""
+        if user_input is not None:
+            self._scan_options = user_input
+            # Proceed to configure the first panel (mandatory)
+            return await self.async_step_first_panel()
+
+        scan_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL_ZONES,
+                    default=DEFAULT_SCAN_INTERVAL_ZONES,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL_PARTITIONS,
+                    default=DEFAULT_SCAN_INTERVAL_PARTITIONS,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL_TEMPERATURES,
+                    default=DEFAULT_SCAN_INTERVAL_TEMPERATURES,
+                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL_OUTPUTS,
+                    default=DEFAULT_SCAN_INTERVAL_OUTPUTS,
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
+            }
+        )
+
+        return self.async_show_form(step_id="scan_intervals", data_schema=scan_schema)
+
+    async def async_step_first_panel(self, user_input=None) -> ConfigFlowResult:
+        """Configure the first alarm panel (mandatory)."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            name = user_input.get(CONF_ALARM_PANEL_NAME)
+            pin = user_input.get(CONF_ALARM_PANEL_PIN)
+
+            panel_def = {
+                CONF_ALARM_PANEL_NAME: name,
+                CONF_ALARM_PANEL_PIN: pin,
+                CONF_PARTITION_AWAY: user_input.get(CONF_PARTITION_AWAY, []),
+                CONF_PARTITION_NIGHT: user_input.get(CONF_PARTITION_NIGHT, []),
+                CONF_SCENARIO_DISARM: user_input.get(CONF_SCENARIO_DISARM, ""),
+                CONF_SCENARIO_AWAY: user_input.get(CONF_SCENARIO_AWAY, ""),
+                CONF_SCENARIO_NIGHT: user_input.get(CONF_SCENARIO_NIGHT, ""),
+            }
+            self._panels.append(panel_def)
+            # Proceed to panel management (add more or finish)
+            return await self.async_step_panels()
+
+        partitions = await self._client.partition_descriptions()
+        select_partitions = {v: v for v in list(
+            filter(None, partitions)) if v != ""}
+        scenarios = await self._client.scenario_descriptions()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ALARM_PANEL_NAME, default="Alarm panel"): str,
+                vol.Required(CONF_ALARM_PANEL_PIN): str,
+                vol.Required(CONF_SCENARIO_DISARM): vol.In(scenarios),
+                vol.Required(CONF_SCENARIO_AWAY): vol.In(scenarios),
+                vol.Optional(CONF_PARTITION_AWAY, default=[]): cv.multi_select(
+                    select_partitions
+                ),
+                vol.Optional(CONF_SCENARIO_NIGHT, default=""): vol.In(
+                    ["", *scenarios]
+                ),
+                vol.Optional(CONF_PARTITION_NIGHT, default=[]): cv.multi_select(
+                    select_partitions
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="first_panel",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "info": "Configure the first alarm panel (required)"
+            },
+        )
+
+    async def async_step_panels(self, user_input=None) -> ConfigFlowResult:
+        """Manage alarm panels: add more, edit, delete, or finish."""
+        if user_input is not None:
+            action = user_input.get("action")
+            if action == "add":
+                return await self.async_step_add_panel()
+            if action == "edit":
+                panel_name = user_input.get("panel_to_edit")
+                if panel_name:
+                    return await self.async_step_edit_panel({"target": panel_name})
+            if action == "delete":
+                panel_name = user_input.get("panel_to_delete")
+                if panel_name and len(self._panels) > 1:
+                    self._panels = [
+                        p
+                        for p in self._panels
+                        if p.get(CONF_ALARM_PANEL_NAME) != panel_name
+                    ]
+                    return await self.async_step_panels()
+            if action == "done":
+                # Save all configuration
+                data = {**self._user_data, **self._scan_options}
+                options = {CONF_ALARM_PANELS: self._panels}
+                return self.async_create_entry(
+                    title=self._user_data.get("host", "Lares Alarm"),
+                    data=data,
+                    options=options,
+                )
+
+        panel_list = (
+            "\n".join(
+                f"- {p.get(CONF_ALARM_PANEL_NAME)}" for p in self._panels)
+            or "No panels configured"
+        )
+
+        return self.async_show_form(
+            step_id="panels",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("action", default="done"): vol.In(
+                        {"add": "Add", "edit": "Edit",
+                            "delete": "Delete", "done": "Finish"}
+                    ),
+                    vol.Optional("panel_to_edit"): (
+                        vol.In([p.get(CONF_ALARM_PANEL_NAME)
+                               for p in self._panels])
+                        if self._panels
+                        else str
+                    ),
+                    vol.Optional("panel_to_delete"): (
+                        vol.In([p.get(CONF_ALARM_PANEL_NAME)
+                               for p in self._panels])
+                        if len(self._panels) > 1
+                        else str
+                    ),
+                }
+            ),
+            description_placeholders={"panel_list": panel_list},
+        )
+
+    async def async_step_add_panel(self, user_input=None) -> ConfigFlowResult:
+        """Add a new alarm panel."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            name = user_input.get(CONF_ALARM_PANEL_NAME)
+            pin = user_input.get(CONF_ALARM_PANEL_PIN)
+
+            if any(p.get(CONF_ALARM_PANEL_NAME) == name for p in self._panels):
+                errors[CONF_ALARM_PANEL_NAME] = "name_exists"
+            else:
+                panel_def = {
+                    CONF_ALARM_PANEL_NAME: name,
+                    CONF_ALARM_PANEL_PIN: pin,
+                    CONF_PARTITION_AWAY: user_input.get(CONF_PARTITION_AWAY, []),
+                    CONF_PARTITION_NIGHT: user_input.get(CONF_PARTITION_NIGHT, []),
+                    CONF_SCENARIO_DISARM: user_input.get(CONF_SCENARIO_DISARM, ""),
+                    CONF_SCENARIO_AWAY: user_input.get(CONF_SCENARIO_AWAY, ""),
+                    CONF_SCENARIO_NIGHT: user_input.get(CONF_SCENARIO_NIGHT, ""),
+                }
+                self._panels.append(panel_def)
+                return await self.async_step_panels()
+
+        partitions = await self._client.partition_descriptions()
+        select_partitions = {v: v for v in list(
+            filter(None, partitions)) if v != ""}
+        scenarios = await self._client.scenario_descriptions()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ALARM_PANEL_NAME): str,
+                vol.Required(CONF_ALARM_PANEL_PIN): str,
+                vol.Required(CONF_SCENARIO_DISARM): vol.In(scenarios),
+                vol.Required(CONF_SCENARIO_AWAY): vol.In(scenarios),
+                vol.Optional(CONF_PARTITION_AWAY, default=[]): cv.multi_select(
+                    select_partitions
+                ),
+                vol.Optional(CONF_SCENARIO_NIGHT, default=""): vol.In(
+                    ["", *scenarios]
+                ),
+                vol.Optional(CONF_PARTITION_NIGHT, default=[]): cv.multi_select(
+                    select_partitions
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="add_panel",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "info": "Configure a dedicated alarm panel"
+            },
+        )
+
+    async def async_step_edit_panel(self, user_input=None) -> ConfigFlowResult:
+        """Edit an existing alarm panel."""
+        errors: dict[str, str] = {}
+
+        target_name = None
+        if user_input and "target" in user_input and not user_input.get(
+            CONF_ALARM_PANEL_NAME
+        ):
+            target_name = user_input["target"]
+        elif user_input and CONF_ALARM_PANEL_NAME in user_input:
+            target_name = user_input.get(CONF_ALARM_PANEL_NAME)
+
+        panel = next(
+            (
+                p
+                for p in self._panels
+                if p.get(CONF_ALARM_PANEL_NAME) == target_name
+            ),
+            None,
+        )
+        if panel is None:
+            return await self.async_step_panels()
+
+        if user_input and "target" not in user_input:
+            # Save edits
+            new_pin = user_input.get(CONF_ALARM_PANEL_PIN)
+            if new_pin:
+                panel[CONF_ALARM_PANEL_PIN] = new_pin
+            panel[CONF_SCENARIO_DISARM] = user_input.get(
+                CONF_SCENARIO_DISARM, panel.get(CONF_SCENARIO_DISARM, "")
+            )
+            panel[CONF_SCENARIO_AWAY] = user_input.get(
+                CONF_SCENARIO_AWAY, panel.get(CONF_SCENARIO_AWAY, "")
+            )
+            panel[CONF_SCENARIO_NIGHT] = user_input.get(
+                CONF_SCENARIO_NIGHT, panel.get(CONF_SCENARIO_NIGHT, "")
+            )
+            panel[CONF_PARTITION_AWAY] = user_input.get(
+                CONF_PARTITION_AWAY, panel.get(CONF_PARTITION_AWAY, [])
+            )
+            panel[CONF_PARTITION_NIGHT] = user_input.get(
+                CONF_PARTITION_NIGHT, panel.get(CONF_PARTITION_NIGHT, [])
+            )
+            return await self.async_step_panels()
+
+        partitions = await self._client.partition_descriptions()
+        select_partitions = {v: v for v in list(
+            filter(None, partitions)) if v != ""}
+        scenarios = await self._client.scenario_descriptions()
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ALARM_PANEL_NAME, default=panel.get(
+                        CONF_ALARM_PANEL_NAME)
+                ): vol.In([panel.get(CONF_ALARM_PANEL_NAME)]),
+                vol.Optional(CONF_ALARM_PANEL_PIN): str,
+                vol.Required(
+                    CONF_SCENARIO_DISARM,
+                    default=panel.get(CONF_SCENARIO_DISARM, ""),
+                ): vol.In(scenarios),
+                vol.Required(
+                    CONF_SCENARIO_AWAY, default=panel.get(
+                        CONF_SCENARIO_AWAY, "")
+                ): vol.In(scenarios),
+                vol.Optional(
+                    CONF_SCENARIO_NIGHT, default=panel.get(
+                        CONF_SCENARIO_NIGHT, "")
+                ): vol.In(["", *scenarios]),
+                vol.Optional(
+                    CONF_PARTITION_AWAY, default=panel.get(
+                        CONF_PARTITION_AWAY, [])
+                ): cv.multi_select(select_partitions),
+                vol.Optional(
+                    CONF_PARTITION_NIGHT, default=panel.get(
+                        CONF_PARTITION_NIGHT, [])
+                ): cv.multi_select(select_partitions),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="edit_panel",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "info": f"Edit alarm panel '{panel.get(CONF_ALARM_PANEL_NAME)}' (PIN optional)"
+            },
+        )
+
 
 class LaresOptionsFlowHandler(OptionsFlow):
-    """Handle a options flow for Ksenia Lares Alarm."""
+    """Handle options flow for Ksenia Lares Alarm."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self.client = LaresBase(config_entry.data)
+        self._base_options: dict[str, Any] = {}
+        self._panels: list[dict[str, Any]] = []
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+        """Manage scan interval options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            self._base_options = user_input
+            # Load existing panels
+            self._panels = list(
+                self.config_entry.options.get(CONF_ALARM_PANELS, []))
+            return await self.async_step_panels()
 
-        partitions = await self.client.partition_descriptions()
-        select_partitions = {v: v for v in list(filter(None, partitions)) if v != ""}
-
-        scenarios = await self.client.scenario_descriptions()
-        scenarios_with_empty = ["", *scenarios]
         options = {
-            vol.Optional(CONF_PIN): str,
             vol.Optional(
                 CONF_SCAN_INTERVAL_ZONES,
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL_ZONES,
-                    self.config_entry.data.get(CONF_SCAN_INTERVAL_ZONES, DEFAULT_SCAN_INTERVAL_ZONES)
+                    self.config_entry.data.get(
+                        CONF_SCAN_INTERVAL_ZONES, DEFAULT_SCAN_INTERVAL_ZONES
+                    ),
                 ),
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
             vol.Optional(
                 CONF_SCAN_INTERVAL_PARTITIONS,
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL_PARTITIONS,
-                    self.config_entry.data.get(CONF_SCAN_INTERVAL_PARTITIONS, DEFAULT_SCAN_INTERVAL_PARTITIONS)
+                    self.config_entry.data.get(
+                        CONF_SCAN_INTERVAL_PARTITIONS,
+                        DEFAULT_SCAN_INTERVAL_PARTITIONS,
+                    ),
                 ),
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
             vol.Optional(
                 CONF_SCAN_INTERVAL_TEMPERATURES,
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL_TEMPERATURES,
-                    self.config_entry.data.get(CONF_SCAN_INTERVAL_TEMPERATURES, DEFAULT_SCAN_INTERVAL_TEMPERATURES)
+                    self.config_entry.data.get(
+                        CONF_SCAN_INTERVAL_TEMPERATURES,
+                        DEFAULT_SCAN_INTERVAL_TEMPERATURES,
+                    ),
                 ),
             ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
             vol.Optional(
                 CONF_SCAN_INTERVAL_OUTPUTS,
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL_OUTPUTS,
-                    self.config_entry.data.get(CONF_SCAN_INTERVAL_OUTPUTS, DEFAULT_SCAN_INTERVAL_OUTPUTS)
+                    self.config_entry.data.get(
+                        CONF_SCAN_INTERVAL_OUTPUTS, DEFAULT_SCAN_INTERVAL_OUTPUTS
+                    ),
                 ),
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=300)),
-            vol.Required(
-                CONF_SCENARIO_DISARM,
-                default=self.config_entry.options.get(CONF_SCENARIO_DISARM, ""),
-            ): vol.In(scenarios),
-            vol.Required(
-                CONF_PARTITION_AWAY,
-                default=self.config_entry.options.get(CONF_PARTITION_AWAY, []),
-            ): cv.multi_select(select_partitions),
-            vol.Required(
-                CONF_SCENARIO_AWAY,
-                default=self.config_entry.options.get(CONF_SCENARIO_AWAY, ""),
-            ): vol.In(scenarios),
-            vol.Optional(
-                CONF_PARTITION_HOME,
-                default=self.config_entry.options.get(CONF_PARTITION_HOME, []),
-            ): cv.multi_select(select_partitions),
-            vol.Optional(
-                CONF_SCENARIO_HOME,
-                default=self.config_entry.options.get(CONF_SCENARIO_HOME, ""),
-            ): vol.In(scenarios_with_empty),
-            vol.Optional(
-                CONF_PARTITION_NIGHT,
-                default=self.config_entry.options.get(CONF_PARTITION_NIGHT, []),
-            ): cv.multi_select(select_partitions),
-            vol.Optional(
-                CONF_SCENARIO_NIGHT,
-                default=self.config_entry.options.get(CONF_SCENARIO_NIGHT, ""),
-            ): vol.In(scenarios_with_empty),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+
+    async def async_step_panels(self, user_input=None) -> ConfigFlowResult:
+        """Manage alarm panels (add/edit/delete)."""
+        if user_input is not None:
+            action = user_input.get("action")
+            if action == "add":
+                return await self.async_step_add_panel()
+            if action == "edit":
+                panel_name = user_input.get("panel_to_edit")
+                if panel_name:
+                    return await self.async_step_edit_panel({"target": panel_name})
+            if action == "delete":
+                panel_name = user_input.get("panel_to_delete")
+                if panel_name and len(self._panels) > 1:
+                    self._panels = [
+                        p
+                        for p in self._panels
+                        if p.get(CONF_ALARM_PANEL_NAME) != panel_name
+                    ]
+                    return await self.async_step_panels()
+            if action == "done":
+                combined = {**self._base_options,
+                            CONF_ALARM_PANELS: self._panels}
+                return self.async_create_entry(title="", data=combined)
+
+        panel_list = (
+            "\n".join(
+                f"- {p.get(CONF_ALARM_PANEL_NAME)}" for p in self._panels)
+            or "No panels configured"
+        )
+
+        return self.async_show_form(
+            step_id="panels",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("action", default="done"): vol.In(
+                        {"add": "Add", "edit": "Edit",
+                            "delete": "Delete", "done": "Finish"}
+                    ),
+                    vol.Optional("panel_to_edit"): (
+                        vol.In([p.get(CONF_ALARM_PANEL_NAME)
+                               for p in self._panels])
+                        if self._panels
+                        else str
+                    ),
+                    vol.Optional("panel_to_delete"): (
+                        vol.In([p.get(CONF_ALARM_PANEL_NAME)
+                               for p in self._panels])
+                        if len(self._panels) > 1
+                        else str
+                    ),
+                }
+            ),
+            description_placeholders={"panel_list": panel_list},
+        )
+
+    async def async_step_add_panel(self, user_input=None) -> ConfigFlowResult:
+        """Add a new alarm panel."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            name = user_input.get(CONF_ALARM_PANEL_NAME)
+            pin = user_input.get(CONF_ALARM_PANEL_PIN)
+
+            if any(p.get(CONF_ALARM_PANEL_NAME) == name for p in self._panels):
+                errors[CONF_ALARM_PANEL_NAME] = "name_exists"
+            else:
+                panel_def = {
+                    CONF_ALARM_PANEL_NAME: name,
+                    CONF_ALARM_PANEL_PIN: pin,
+                    CONF_PARTITION_AWAY: user_input.get(CONF_PARTITION_AWAY, []),
+                    CONF_PARTITION_NIGHT: user_input.get(CONF_PARTITION_NIGHT, []),
+                    CONF_SCENARIO_DISARM: user_input.get(CONF_SCENARIO_DISARM, ""),
+                    CONF_SCENARIO_AWAY: user_input.get(CONF_SCENARIO_AWAY, ""),
+                    CONF_SCENARIO_NIGHT: user_input.get(CONF_SCENARIO_NIGHT, ""),
+                }
+                self._panels.append(panel_def)
+                return await self.async_step_panels()
+
+        partitions = await self.client.partition_descriptions()
+        select_partitions = {v: v for v in list(
+            filter(None, partitions)) if v != ""}
+        scenarios = await self.client.scenario_descriptions()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ALARM_PANEL_NAME): str,
+                vol.Required(CONF_ALARM_PANEL_PIN): str,
+                vol.Required(CONF_SCENARIO_DISARM): vol.In(scenarios),
+                vol.Required(CONF_SCENARIO_AWAY): vol.In(scenarios),
+                vol.Optional(CONF_PARTITION_AWAY, default=[]): cv.multi_select(
+                    select_partitions
+                ),
+                vol.Optional(CONF_SCENARIO_NIGHT, default=""): vol.In(
+                    ["", *scenarios]
+                ),
+                vol.Optional(CONF_PARTITION_NIGHT, default=[]): cv.multi_select(
+                    select_partitions
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="add_panel",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "info": "Configure a dedicated alarm panel"
+            },
+        )
+
+    async def async_step_edit_panel(self, user_input=None) -> ConfigFlowResult:
+        """Edit an existing alarm panel."""
+        errors: dict[str, str] = {}
+
+        target_name = None
+        if user_input and "target" in user_input and not user_input.get(
+            CONF_ALARM_PANEL_NAME
+        ):
+            target_name = user_input["target"]
+        elif user_input and CONF_ALARM_PANEL_NAME in user_input:
+            target_name = user_input.get(CONF_ALARM_PANEL_NAME)
+
+        panel = next(
+            (
+                p
+                for p in self._panels
+                if p.get(CONF_ALARM_PANEL_NAME) == target_name
+            ),
+            None,
+        )
+        if panel is None:
+            return await self.async_step_panels()
+
+        if user_input and "target" not in user_input:
+            # Save edits
+            new_pin = user_input.get(CONF_ALARM_PANEL_PIN)
+            if new_pin:
+                panel[CONF_ALARM_PANEL_PIN] = new_pin
+            panel[CONF_SCENARIO_DISARM] = user_input.get(
+                CONF_SCENARIO_DISARM, panel.get(CONF_SCENARIO_DISARM, "")
+            )
+            panel[CONF_SCENARIO_AWAY] = user_input.get(
+                CONF_SCENARIO_AWAY, panel.get(CONF_SCENARIO_AWAY, "")
+            )
+            panel[CONF_SCENARIO_NIGHT] = user_input.get(
+                CONF_SCENARIO_NIGHT, panel.get(CONF_SCENARIO_NIGHT, "")
+            )
+            panel[CONF_PARTITION_AWAY] = user_input.get(
+                CONF_PARTITION_AWAY, panel.get(CONF_PARTITION_AWAY, [])
+            )
+            panel[CONF_PARTITION_NIGHT] = user_input.get(
+                CONF_PARTITION_NIGHT, panel.get(CONF_PARTITION_NIGHT, [])
+            )
+            return await self.async_step_panels()
+
+        partitions = await self.client.partition_descriptions()
+        select_partitions = {v: v for v in list(
+            filter(None, partitions)) if v != ""}
+        scenarios = await self.client.scenario_descriptions()
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ALARM_PANEL_NAME, default=panel.get(
+                        CONF_ALARM_PANEL_NAME)
+                ): vol.In([panel.get(CONF_ALARM_PANEL_NAME)]),
+                vol.Optional(CONF_ALARM_PANEL_PIN): str,
+                vol.Required(
+                    CONF_SCENARIO_DISARM,
+                    default=panel.get(CONF_SCENARIO_DISARM, ""),
+                ): vol.In(scenarios),
+                vol.Required(
+                    CONF_SCENARIO_AWAY, default=panel.get(
+                        CONF_SCENARIO_AWAY, "")
+                ): vol.In(scenarios),
+                vol.Optional(
+                    CONF_SCENARIO_NIGHT, default=panel.get(
+                        CONF_SCENARIO_NIGHT, "")
+                ): vol.In(["", *scenarios]),
+                vol.Optional(
+                    CONF_PARTITION_AWAY, default=panel.get(
+                        CONF_PARTITION_AWAY, [])
+                ): cv.multi_select(select_partitions),
+                vol.Optional(
+                    CONF_PARTITION_NIGHT, default=panel.get(
+                        CONF_PARTITION_NIGHT, [])
+                ): cv.multi_select(select_partitions),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="edit_panel",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "info": f"Edit alarm panel '{panel.get(CONF_ALARM_PANEL_NAME)}' (PIN optional)"
+            },
+        )
 
 
 class CannotConnect(HomeAssistantError):

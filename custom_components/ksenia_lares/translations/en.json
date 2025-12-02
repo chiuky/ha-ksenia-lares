@@ -6,15 +6,203 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "name_exists": "A panel with this name already exists"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "password": "Password",
                     "port": "Port",
-                    "username": "Username"
+                    "username": "Username",
+                    "password": "Password",
+                    "automation_pin": "Automation PIN (outputs control)",
+                    "scan_interval": "Main scan interval (seconds)"
+                },
+                "data_description": {
+                    "automation_pin": "PIN used to switch outputs on/off (optional)",
+                    "scan_interval": "Main polling interval for the coordinator"
+                }
+            },
+            "scan_intervals": {
+                "title": "Scan Intervals",
+                "description": "Configure update intervals for different resources.",
+                "data": {
+                    "scan_interval_zones": "Zones update interval (seconds)",
+                    "scan_interval_partitions": "Partitions update interval (seconds)",
+                    "scan_interval_temperatures": "Temperatures update interval (seconds)",
+                    "scan_interval_outputs": "Outputs update interval (seconds)"
+                },
+                "data_description": {
+                    "scan_interval_zones": "How often to update zone sensors (1-300 seconds)",
+                    "scan_interval_partitions": "How often to update partition sensors (1-300 seconds)",
+                    "scan_interval_temperatures": "How often to update temperature sensors (10-3600 seconds)",
+                    "scan_interval_outputs": "How often to update output switches (1-300 seconds)"
+                }
+            },
+            "first_panel": {
+                "title": "First Alarm Panel",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Panel name",
+                    "panel_pin": "Panel PIN",
+                    "scenario_disarm": "Disarm scenario",
+                    "scenario_away": "Away scenario",
+                    "scenario_night": "Night scenario (optional)",
+                    "partition_away": "Away partitions",
+                    "partition_night": "Night partitions"
+                },
+                "data_description": {
+                    "panel_name": "Unique name for this alarm panel.",
+                    "panel_pin": "PIN used internally for this panel only (never shown).",
+                    "scenario_disarm": "Scenario used for disarm.",
+                    "scenario_away": "Scenario used for arm away.",
+                    "scenario_night": "Scenario used for arm night.",
+                    "partition_away": "Partitions that define away armed state.",
+                    "partition_night": "Partitions that define night armed state."
+                }
+            },
+            "panels": {
+                "title": "Alarm Panels Management",
+                "description": "Current panels:\n{panel_list}\n\nAdd more panels or finish configuration.",
+                "data": {
+                    "action": "Action",
+                    "add": "Add",
+                    "edit": "Edit",
+                    "delete": "Delete",
+                    "done": "Finish",
+                    "panel_to_edit": "Panel to edit",
+                    "panel_to_delete": "Panel to delete",
+                    "no_panels": "No panels configured"
+                }
+            },
+            "add_panel": {
+                "title": "Add Alarm Panel",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Panel name",
+                    "panel_pin": "Panel PIN",
+                    "scenario_disarm": "Disarm scenario",
+                    "scenario_away": "Away scenario",
+                    "scenario_night": "Night scenario (optional)",
+                    "partition_away": "Away partitions",
+                    "partition_night": "Night partitions"
+                },
+                "data_description": {
+                    "panel_name": "Unique name for this alarm panel.",
+                    "panel_pin": "PIN used internally for this panel only (never shown).",
+                    "scenario_disarm": "Scenario used for disarm.",
+                    "scenario_away": "Scenario used for arm away.",
+                    "scenario_night": "Scenario used for arm night.",
+                    "partition_away": "Partitions that define away armed state.",
+                    "partition_night": "Partitions that define night armed state."
+                }
+            },
+            "edit_panel": {
+                "title": "Edit Alarm Panel",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Panel name (fixed)",
+                    "panel_pin": "New PIN (optional)",
+                    "scenario_disarm": "Disarm scenario",
+                    "scenario_away": "Away scenario",
+                    "scenario_night": "Night scenario (optional)",
+                    "partition_away": "Away partitions",
+                    "partition_night": "Night partitions"
+                },
+                "data_description": {
+                    "panel_pin": "Leave blank to keep existing PIN.",
+                    "scenario_disarm": "Scenario used for disarm.",
+                    "scenario_away": "Scenario used for arm away.",
+                    "scenario_night": "Scenario used for arm night.",
+                    "partition_away": "Partitions that define away armed state.",
+                    "partition_night": "Partitions that define night armed state."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Scan Intervals",
+                "description": "Configure update intervals for sensors and devices.",
+                "data": {
+                    "scan_interval_zones": "Zones update interval (seconds)",
+                    "scan_interval_partitions": "Partitions update interval (seconds)",
+                    "scan_interval_temperatures": "Temperatures update interval (seconds)",
+                    "scan_interval_outputs": "Outputs update interval (seconds)",
+                    "scenario_disarm": "Disarm scenario",
+                    "partition_away": "Away partitions",
+                    "scenario_away": "Away scenario",
+                    "partition_night": "Night partitions",
+                    "scenario_night": "Night scenario"
+                },
+                "data_description": {
+                    "scan_interval_zones": "How often to update zone sensors (1-300 seconds)",
+                    "scan_interval_partitions": "How often to update partition sensors (1-300 seconds)",
+                    "scan_interval_temperatures": "How often to update temperature sensors (10-3600 seconds)",
+                    "scan_interval_outputs": "How often to update output switches (1-300 seconds)",
+                    "scenario_disarm": "Select the scenario to activate to disarm",
+                    "partition_away": "Select all partitions that need to armed for away state",
+                    "scenario_away": "Select the scenario to activate to arm away",
+                    "partition_night": "Select all partitions that need to armed for night state",
+                    "scenario_night": "Select the scenario to activate to arm night"
+                }
+            },
+            "panels": {
+                "title": "Alarm Panels Management",
+                "description": "Current panels:\n{panel_list}\n\nAdd, edit, delete panels or finish.",
+                "data": {
+                    "action": "Action",
+                    "add": "Add",
+                    "edit": "Edit",
+                    "delete": "Delete",
+                    "done": "Finish",
+                    "panel_to_edit": "Panel to edit",
+                    "panel_to_delete": "Panel to delete"
+                }
+            },
+            "add_panel": {
+                "title": "Add Alarm Panel",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Panel name",
+                    "panel_pin": "Panel PIN",
+                    "scenario_disarm": "Disarm scenario",
+                    "scenario_away": "Away scenario",
+                    "scenario_night": "Night scenario (optional)",
+                    "partition_away": "Away partitions",
+                    "partition_night": "Night partitions"
+                },
+                "data_description": {
+                    "panel_name": "Unique name for this alarm panel.",
+                    "panel_pin": "PIN used internally for this panel only (never shown).",
+                    "scenario_disarm": "Scenario used for disarm.",
+                    "scenario_away": "Scenario used for arm away.",
+                    "scenario_night": "Scenario used for arm night.",
+                    "partition_away": "Partitions that define away armed state.",
+                    "partition_night": "Partitions that define night armed state."
+                }
+            },
+            "edit_panel": {
+                "title": "Edit Alarm Panel",
+                "description": "{info}",
+                "data": {
+                    "panel_name": "Panel name (fixed)",
+                    "panel_pin": "New PIN (optional)",
+                    "scenario_disarm": "Disarm scenario",
+                    "scenario_away": "Away scenario",
+                    "scenario_night": "Night scenario (optional)",
+                    "partition_away": "Away partitions",
+                    "partition_night": "Night partitions"
+                },
+                "data_description": {
+                    "panel_pin": "Leave blank to keep existing PIN.",
+                    "scenario_disarm": "Scenario used for disarm.",
+                    "scenario_away": "Scenario used for arm away.",
+                    "scenario_night": "Scenario used for arm night.",
+                    "partition_away": "Partitions that define away armed state.",
+                    "partition_night": "Partitions that define night armed state."
                 }
             }
         }
@@ -23,33 +211,6 @@
         "switch": {
             "bypass": {
                 "name": "Bypass"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "partition_away": "Away partitions",
-                    "partition_home": "Home partitions",
-                    "partition_night": "Night partitions",
-                    "pin": "PIN",
-                    "scenario_away": "Away scenario",
-                    "scenario_disarm": "Disarm scenario",
-                    "scenario_home": "Home scenario",
-                    "scenario_night": "Night scenario"
-                },
-                "data_description": {
-                    "partition_away": "Select all partitions that need to armed for away state",
-                    "partition_home": "Select all partitions that need to armed for home state",
-                    "partition_night": "Select all partitions that need to armed for night state",
-                    "pin": "PIN to use for zone/partition bypass",
-                    "scenario_away": "Select the scenario to activate to arm away",
-                    "scenario_disarm": "Select the scenario to activate to disarm",
-                    "scenario_home": "Select the scenario to activate to arm home",
-                    "scenario_night": "Select the scenario to activate to arm night"
-                },
-                "description": "Link different alarm states to partition and scenarios."
             }
         }
     }

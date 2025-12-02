@@ -393,8 +393,7 @@ class LaresBase:
                 self._url,
                 str(err),
             )
-        except Exception as err:
-            _LOGGER.exception(
-                "Unexpected error accessing %s: %s", self._url, str(err)
-            )
+        except RuntimeError as err:
+            # Covers unexpected runtime issues without masking system-exiting exceptions
+            _LOGGER.error("Runtime error accessing %s: %s", self._url, err)
         return None
