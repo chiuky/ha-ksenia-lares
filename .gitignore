@@ -1,17 +1,9 @@
 /config
-config2/*
-
-config/custom_components
-
-tests/testing_config/deps
-tests/testing_config/home-assistant.log*
 
 # hass-release
 data/
 .token
 
-# Translations
-homeassistant/components/*/translations
 
 # Hide sublime text stuff
 *.sublime-project
@@ -109,11 +101,7 @@ virtualization/vagrant/setup_done
 virtualization/vagrant/.vagrant
 virtualization/vagrant/config
 
-# Visual Studio Code
-.vscode/*
-!.vscode/cSpell.json
-!.vscode/extensions.json
-!.vscode/tasks.json
+
 .env
 
 # Windows Explorer

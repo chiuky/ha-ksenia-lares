@@ -69,9 +69,8 @@ async def async_setup_entry(
     except (OSError, TimeoutError) as err:
         _LOGGER.error("Network error setting up switches: %s", err)
         return
-    except Exception as err:
-        _LOGGER.error("Unexpected error setting up switches: %s",
-                      err, exc_info=True)
+    except (KeyError, AttributeError, TypeError, OSError, TimeoutError) as err:
+        _LOGGER.error("Error setting up switches: %s", err, exc_info=True)
         return
 
     def _async_add_lares_bypass_switch() -> None:
