@@ -42,7 +42,7 @@
             },
             "first_panel": {
                 "title": "First Alarm Panel",
-                "description": "{info}",
+                "description": "Configure the first alarm panel (required)",
                 "data": {
                     "panel_name": "Panel name",
                     "panel_pin": "Panel PIN",
@@ -78,7 +78,7 @@
             },
             "add_panel": {
                 "title": "Add Alarm Panel",
-                "description": "{info}",
+                "description": "Configure a dedicated alarm panel",
                 "data": {
                     "panel_name": "Panel name",
                     "panel_pin": "Panel PIN",
@@ -100,7 +100,7 @@
             },
             "edit_panel": {
                 "title": "Edit Alarm Panel",
-                "description": "{info}",
+                "description": "Edit alarm panel '{panel_name}' (PIN optional)",
                 "data": {
                     "panel_name": "Panel name (fixed)",
                     "panel_pin": "New PIN (optional)",
@@ -164,7 +164,7 @@
             },
             "add_panel": {
                 "title": "Add Alarm Panel",
-                "description": "{info}",
+                "description": "Configure a dedicated alarm panel",
                 "data": {
                     "panel_name": "Panel name",
                     "panel_pin": "Panel PIN",
@@ -186,7 +186,7 @@
             },
             "edit_panel": {
                 "title": "Edit Alarm Panel",
-                "description": "{info}",
+                "description": "Edit alarm panel '{panel_name}' (PIN optional)",
                 "data": {
                     "panel_name": "Panel name (fixed)",
                     "panel_pin": "New PIN (optional)",

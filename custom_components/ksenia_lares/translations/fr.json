@@ -42,7 +42,7 @@
             },
             "first_panel": {
                 "title": "Premier Panneau d'Alarme",
-                "description": "{info}",
+                "description": "Configurez le premier panneau d'alarme (obligatoire)",
                 "data": {
                     "panel_name": "Nom du panneau",
                     "panel_pin": "Code PIN du panneau",
@@ -78,7 +78,7 @@
             },
             "add_panel": {
                 "title": "Ajouter Panneau d'Alarme",
-                "description": "{info}",
+                "description": "Configurez un panneau d'alarme dédié",
                 "data": {
                     "panel_name": "Nom du panneau",
                     "panel_pin": "Code PIN du panneau",
@@ -100,7 +100,7 @@
             },
             "edit_panel": {
                 "title": "Modifier Panneau d'Alarme",
-                "description": "{info}",
+                "description": "Modifier le panneau d'alarme '{panel_name}' (code PIN optionnel)",
                 "data": {
                     "panel_name": "Nom du panneau (fixe)",
                     "panel_pin": "Nouveau code PIN (optionnel)",
@@ -164,7 +164,7 @@
             },
             "add_panel": {
                 "title": "Ajouter Panneau d'Alarme",
-                "description": "{info}",
+                "description": "Configurez un panneau d'alarme dédié",
                 "data": {
                     "panel_name": "Nom du panneau",
                     "panel_pin": "Code PIN du panneau",
@@ -186,7 +186,7 @@
             },
             "edit_panel": {
                 "title": "Modifier Panneau d'Alarme",
-                "description": "{info}",
+                "description": "Modifier le panneau d'alarme '{panel_name}' (code PIN optionnel)",
                 "data": {
                     "panel_name": "Nom du panneau (fixe)",
                     "panel_pin": "Nouveau code PIN (optionnel)",

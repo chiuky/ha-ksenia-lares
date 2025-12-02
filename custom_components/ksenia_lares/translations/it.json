@@ -42,7 +42,7 @@
             },
             "first_panel": {
                 "title": "Primo Pannello Allarme",
-                "description": "{info}",
+                "description": "Configura il primo pannello allarme (obbligatorio)",
                 "data": {
                     "panel_name": "Nome pannello",
                     "panel_pin": "PIN pannello",
@@ -78,7 +78,7 @@
             },
             "add_panel": {
                 "title": "Aggiungi Pannello Allarme",
-                "description": "{info}",
+                "description": "Configura un pannello allarme dedicato",
                 "data": {
                     "panel_name": "Nome pannello",
                     "panel_pin": "PIN pannello",
@@ -100,7 +100,7 @@
             },
             "edit_panel": {
                 "title": "Modifica Pannello Allarme",
-                "description": "{info}",
+                "description": "Modifica pannello allarme '{panel_name}' (PIN opzionale)",
                 "data": {
                     "panel_name": "Nome pannello (fisso)",
                     "panel_pin": "Nuovo PIN (opzionale)",
@@ -164,7 +164,7 @@
             },
             "add_panel": {
                 "title": "Aggiungi Pannello Allarme",
-                "description": "{info}",
+                "description": "Configura un pannello allarme dedicato",
                 "data": {
                     "panel_name": "Nome pannello",
                     "panel_pin": "PIN pannello",
@@ -186,7 +186,7 @@
             },
             "edit_panel": {
                 "title": "Modifica Pannello Allarme",
-                "description": "{info}",
+                "description": "Modifica pannello allarme '{panel_name}' (PIN opzionale)",
                 "data": {
                     "panel_name": "Nome pannello (fisso)",
                     "panel_pin": "Nuovo PIN (opzionale)",
