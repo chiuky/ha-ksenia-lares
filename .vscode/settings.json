@@ -22,5 +22,44 @@
         }
     ],
     "python.analysis.autoImportCompletions": true,
-    "python.analysis.enableSyncServer": false
+    "files.watcherExclude": {
+        "**/.venv/**": true,
+        "**/__pycache__/**": true,
+        "**/.pytest_cache/**": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+        }
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml",
+        "editor.formatOnSave": true
+    },
+    "ruff.configurationPreference": "filesystemFirst",
+    "ruff.enable": true,
+    "ruff.lint.enable": true,
+    "ruff.path": [
+        "/home/vscode/.local/bin/ruff"
+    ],
+    "ruff.interpreter": [
+        "/home/vscode/.local/ha-venv/bin/python"
+    ],
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "yaml.customTags": [
+        "!input scalar",
+        "!secret scalar",
+        "!include_dir_named scalar",
+        "!include_dir_list scalar",
+        "!include_dir_merge_list scalar",
+        "!include_dir_merge_named scalar"
+    ]
 }

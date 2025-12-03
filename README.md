@@ -47,11 +47,48 @@ This integration relies on the web interface to be activated, this is not always
 ### Mapping Alarm
 The KSENIA Lares alarm uses more complex scenarios then the default states of the home assistant alarm (away, night, home). A mapping is needed between the Home Assistant states and the KSENIA Lares scenarios (for activation) and zones/partitions (for state).
 
-Go to [integration](https://my.home-assistant.io/redirect/integration/?domain=ksenia_lares) to setup the mapping. 
+Go to [integration](https://my.home-assistant.io/redirect/integration/?domain=ksenia_lares) to setup the mapping.
 
 ### Bypass zones
-To be able to bypass zones, you will need to configure a PIN to be used. 
+To be able to bypass zones, you will need to configure a PIN to be used.
 
 1. Go to [integration](https://my.home-assistant.io/redirect/integration/?domain=ksenia_lares)
 2. Click 'Configure'
 3. Enter the PIN code to use (it will need to be entered again each time the configuration screen is used).
+
+## Automations
+
+This integration supports **Device Triggers, Actions, and Conditions** that make it easy to create automations from the Home Assistant UI.
+
+### Device Triggers 🎯
+Automatically trigger automations when events occur:
+- **Alarm events**: triggered, armed (away/home/night), disarmed, arming, pending
+- **Zone events**: opened, closed, alarm state
+
+### Device Actions ⚡
+Control your Ksenia Lares devices:
+- **Alarm control**: arm away, arm home, arm night, disarm, trigger
+- **Zone control**: bypass/unbypass zones
+- **Output control**: turn outputs on/off
+
+### Device Conditions ✅
+Check device states in your automations:
+- **Alarm states**: is triggered, is armed, is disarmed, etc.
+- **Zone states**: is opened, is closed, is bypassed
+- **Output states**: is on, is off
+
+### Blueprints 📘
+Ready-to-use automation templates included:
+- **Alarm Triggered Notification** - Get notified when alarm is triggered
+- **Zone Opened Notification** - Get notified when doors/windows open
+- **Auto Arm Away** - Automatically arm when everyone leaves
+- **Auto Disarm** - Automatically disarm when someone arrives
+
+For detailed documentation and examples, see the [Automation Guide](custom_components/ksenia_lares/blueprints/README.md).
+
+### Quick Example
+Create an automation from the UI:
+1. Go to **Settings** → **Automations & Scenes** → **Create Automation**
+2. Choose a trigger/action/condition
+3. Search for your Ksenia Lares device
+4. Configure and save!

@@ -76,7 +76,7 @@ class LaresBase:
             "name": device_info["name"],
             "manufacturer": MANUFACTURER,
             "model": device_info["name"],
-            "sw_version": f'{device_info["version"]}.{device_info["revision"]}.{device_info["build"]}',
+            "sw_version": f"{device_info['version']}.{device_info['revision']}.{device_info['build']}",
             "configuration_url": self._url,
         }
 
@@ -332,7 +332,11 @@ class LaresBase:
             cmd = response.xpath("/cmd")
 
             if cmd is None or len(cmd) == 0 or cmd[0].text != "cmdSent":
-                _LOGGER.error("Command %s failed: %s", command, cmd[0].text if cmd and len(cmd) > 0 else "no response")
+                _LOGGER.error(
+                    "Command %s failed: %s",
+                    command,
+                    cmd[0].text if cmd and len(cmd) > 0 else "no response",
+                )
                 return False
 
             _LOGGER.info("Command %s executed successfully", command)

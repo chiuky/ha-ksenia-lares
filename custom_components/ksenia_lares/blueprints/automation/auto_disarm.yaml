@@ -1,0 +1,92 @@
+blueprint:
+  name: Ksenia Lares - Auto Disarm
+  description: >
+    Automatically disarm the Ksenia Lares alarm when someone arrives home.
+    Can be configured to disarm only during specific times or for specific people.
+  domain: automation
+  source_url: https://github.com/chiuky/ha-ksenia-lares/blob/main/custom_components/ksenia_lares/blueprints/automation/auto_disarm.yaml
+
+  input:
+    alarm_device:
+      name: Alarm Device
+      description: The Ksenia Lares alarm control panel device
+      selector:
+        device:
+          integration: ksenia_lares
+          entity:
+            domain: alarm_control_panel
+
+    presence_entity:
+      name: Presence Entity
+      description: Entity that tracks when someone arrives (person, device_tracker, etc.)
+      selector:
+        entity:
+          domain:
+            - person
+            - device_tracker
+            - binary_sensor
+
+    time_condition:
+      name: Use time restriction
+      description: Only auto-disarm during specific hours
+      default: false
+      selector:
+        boolean:
+
+    time_after:
+      name: Disarm after time
+      description: Only disarm after this time
+      default: "07:00:00"
+      selector:
+        time:
+
+    time_before:
+      name: Disarm before time
+      description: Only disarm before this time
+      default: "22:00:00"
+      selector:
+        time:
+
+    only_when_armed:
+      name: Only when armed
+      description: Only disarm if alarm is currently armed (away, home, or night)
+      default: true
+      selector:
+        boolean:
+
+trigger:
+  - platform: state
+    entity_id: !input presence_entity
+    to:
+      - "home"
+      - "on"
+
+condition:
+  - condition: template
+    value_template: >
+      {% set only_armed = only_when_armed %}
+      {% if only_armed %}
+        {% set alarm_dev = alarm_device %}
+        {% set entities = device_entities(alarm_dev) %}
+        {% set alarm_entity = entities | select('match', 'alarm_control_panel') | list | first %}
+        {{ states(alarm_entity) in ['armed_away', 'armed_home', 'armed_night', 'arming', 'pending'] }}
+      {% else %}
+        true
+      {% endif %}
+
+  - condition: template
+    value_template: >
+      {% set use_time = time_condition %}
+      {% if not use_time %}
+        true
+      {% else %}
+        {% set current_time = now().strftime('%H:%M:%S') %}
+        {% set after = time_after %}
+        {% set before = time_before %}
+        {{ after <= current_time < before }}
+      {% endif %}
+
+action:
+  - service: alarm_control_panel.alarm_disarm
+    target:
+      device_id: !input alarm_device

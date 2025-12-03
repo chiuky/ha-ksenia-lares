@@ -1,5 +1,29 @@
 {
     "recommendations": [
-        "letmaik.git-tree-compare"
+        // Python Development
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        // Code Quality & Formatting
+        "charliermarsh.ruff",
+        "usernamehw.errorlens",
+        // Home Assistant Specific
+        "keesschollaart.vscode-home-assistant",
+        "redhat.vscode-yaml",
+        // Git & Collaboration
+        "eamodio.gitlens",
+        "github.copilot",
+        "github.vscode-pull-request-github",
+        "letmaik.git-tree-compare",
+        // Utilities
+        "aaron-bond.better-comments",
+        "wayou.vscode-todo-highlight",
+        "sleistner.vscode-fileutils",
+        // Testing & Coverage
+        "hbenl.vscode-test-explorer",
+        "ryanluker.vscode-coverage-gutters",
+        // Additional Tools
+        "visualstudioexptteam.vscodeintellicode",
+        "esbenp.prettier-vscode"
     ]
 }

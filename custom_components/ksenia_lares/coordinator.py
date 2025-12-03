@@ -1,6 +1,5 @@
 """The Ksenia Lares data update coordinator."""
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 
@@ -67,7 +66,9 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
 
                 # Update zones if interval passed
                 zones = None
-                if self._should_update(self._last_zones_update, self._scan_interval_zones):
+                if self._should_update(
+                    self._last_zones_update, self._scan_interval_zones
+                ):
                     zones = await self.client.zones()
                     self._last_zones_update = datetime.now()
                     _LOGGER.debug("Updated zones data")
@@ -76,7 +77,9 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
 
                 # Update partitions if interval passed
                 partitions = None
-                if self._should_update(self._last_partitions_update, self._scan_interval_partitions):
+                if self._should_update(
+                    self._last_partitions_update, self._scan_interval_partitions
+                ):
                     partitions = await self.client.partitions()
                     self._last_partitions_update = datetime.now()
                     _LOGGER.debug("Updated partitions data")
@@ -85,7 +88,9 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
 
                 # Update temperatures if interval passed
                 temperatures = None
-                if self._should_update(self._last_temperatures_update, self._scan_interval_temperatures):
+                if self._should_update(
+                    self._last_temperatures_update, self._scan_interval_temperatures
+                ):
                     temperatures = await self.client.temperatures()
                     self._last_temperatures_update = datetime.now()
                     _LOGGER.debug("Updated temperatures data")
@@ -94,7 +99,9 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
 
                 # Update outputs if interval passed
                 outputs = None
-                if self._should_update(self._last_outputs_update, self._scan_interval_outputs):
+                if self._should_update(
+                    self._last_outputs_update, self._scan_interval_outputs
+                ):
                     outputs = await self.client.outputs()
                     self._last_outputs_update = datetime.now()
                     _LOGGER.debug("Updated outputs data")
@@ -119,7 +126,7 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
                     DATA_TEMPERATURES: temperatures,
                     DATA_OUTPUTS: outputs,
                 }
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             _LOGGER.error("Timeout fetching data from Lares device")
             raise UpdateFailed(f"Timeout communicating with device: {err}") from err
         except (OSError, ConnectionError) as err:
@@ -128,6 +135,10 @@ class LaresDataUpdateCoordinator(DataUpdateCoordinator):
         except (KeyError, AttributeError, TypeError) as err:
             _LOGGER.error("Invalid data structure from Lares device: %s", err)
             raise UpdateFailed(f"Invalid data received: {err}") from err
-        except Exception as err:
-            _LOGGER.error("Unexpected error fetching data from Lares device: %s", err, exc_info=True)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "Unexpected error fetching data from Lares device: %s",
+                err,
+                exc_info=True,
+            )
             raise UpdateFailed(f"Error communicating with device: {err}") from err

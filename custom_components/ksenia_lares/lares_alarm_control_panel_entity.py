@@ -1,6 +1,7 @@
 """An implementation of a Lares alarm control panel."""
 
 import logging
+from typing import ClassVar
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -32,8 +33,11 @@ _LOGGER = logging.getLogger(__name__)
 class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
     """An implementation of a Lares alarm control panel."""
 
-    TYPE = DOMAIN
-    ARMED_STATUS = [PARTITION_STATUS_ARMED, PARTITION_STATUS_ARMED_IMMEDIATE]
+    TYPE: ClassVar[str] = DOMAIN
+    ARMED_STATUS: ClassVar[list[str]] = [
+        PARTITION_STATUS_ARMED,
+        PARTITION_STATUS_ARMED_IMMEDIATE,
+    ]
 
     def __init__(
         self,
@@ -55,8 +59,7 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
         self._attr_code_format = CodeFormat.NUMBER
         self._attr_device_info = device_info
         # If panel has its own PIN we can auto arm without user entry
-        self._panel_pin = panel_config.get(
-            "panel_pin") or panel_config.get("pin")
+        self._panel_pin = panel_config.get("panel_pin") or panel_config.get("pin")
         self._attr_code_arm_required = not bool(self._panel_pin)
         self._attr_has_entity_name = True
 
@@ -72,8 +75,7 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         base_name = self._attr_device_info["name"].replace(" ", "_")
-        panel_name = self._panel.get(
-            "panel_name", "default").replace(" ", "_").lower()
+        panel_name = self._panel.get("panel_name", "default").replace(" ", "_").lower()
         return f"lares_control_panel_{base_name}_{panel_name}"
 
     @property
@@ -162,37 +164,45 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
         """
         # Collect the partition names configured for this panel
         panel_partition_names = set(self._options.get(CONF_PARTITION_AWAY, []))
-        panel_partition_names.update(
-            self._options.get(CONF_PARTITION_NIGHT, []))
+        panel_partition_names.update(self._options.get(CONF_PARTITION_NIGHT, []))
 
         if not panel_partition_names:
-            _LOGGER.debug("Panel %s has no configured partitions; skipping status check",
-                          self._panel.get("panel_name"))
+            _LOGGER.debug(
+                "Panel %s has no configured partitions; skipping status check",
+                self._panel.get("panel_name"),
+            )
             return False
 
         # Map configured names to indices in descriptions
         name_to_index = {
             name: idx for idx, name in enumerate(self._partition_descriptions)
         }
-        indices = [name_to_index[name]
-                   for name in panel_partition_names if name in name_to_index]
+        indices = [
+            name_to_index[name]
+            for name in panel_partition_names
+            if name in name_to_index
+        ]
 
         if not indices:
             _LOGGER.debug(
                 "Panel %s configured partitions not found in descriptions: %s",
-                self._panel.get("panel_name"), panel_partition_names,
+                self._panel.get("panel_name"),
+                panel_partition_names,
             )
             return False
 
         # Check only the panel-specific partitions for the given statuses
         in_state = [
-            idx for idx in indices
+            idx
+            for idx in indices
             if self._coordinator.data[DATA_PARTITIONS][idx]["status"] in status_list
         ]
 
         _LOGGER.debug(
             "Panel %s partitions in statuses %s: %s",
-            self._panel.get("panel_name"), status_list, in_state,
+            self._panel.get("panel_name"),
+            status_list,
+            in_state,
         )
 
         return len(in_state) > 0
@@ -207,11 +217,9 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
             return False
 
         descriptions = enumerate(self._partition_descriptions)
-        to_check = (
-            idx for idx, name in descriptions if name in partition_names)
+        to_check = (idx for idx, name in descriptions if name in partition_names)
 
-        _LOGGER.debug("Checking %s (%s) for %s",
-                      partition_names, to_check, key)
+        _LOGGER.debug("Checking %s (%s) for %s", partition_names, to_check, key)
 
         for idx in to_check:
             if (
@@ -227,20 +235,25 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
         scenario_name = self._options.get(key)
 
         if not scenario_name:
-            _LOGGER.debug("Panel %s - scenario key %s not configured",
-                          self._panel.get("panel_name"), key)
+            _LOGGER.debug(
+                "Panel %s - scenario key %s not configured",
+                self._panel.get("panel_name"),
+                key,
+            )
             return
 
         # Prefer panel configured PIN if available
         pin_code = self._panel_pin or code
         if not pin_code:
-            _LOGGER.warning("Panel %s - no PIN code available for command %s",
-                            self._panel.get("panel_name"), key)
+            _LOGGER.warning(
+                "Panel %s - no PIN code available for command %s",
+                self._panel.get("panel_name"),
+                key,
+            )
             return
 
         descriptions = enumerate(self._scenario_descriptions)
-        match_gen = (
-            idx for idx, name in descriptions if name == scenario_name)
+        match_gen = (idx for idx, name in descriptions if name == scenario_name)
         matches = list(match_gen)
 
         if len(matches) != 1:
@@ -262,19 +275,21 @@ class LaresAlarmControlPanelEntity(CoordinatorEntity, AlarmControlPanelEntity):
         )
 
         try:
-            result = await self._coordinator.client.activate_scenario(scenario, pin_code)
+            result = await self._coordinator.client.activate_scenario(
+                scenario, pin_code
+            )
             if result:
-                _LOGGER.info("Panel %s : scenario %d activated",
-                             self._panel.get("panel_name"), scenario)
+                _LOGGER.info(
+                    "Panel %s : scenario %d activated",
+                    self._panel.get("panel_name"),
+                    scenario,
+                )
                 await self._coordinator.async_request_refresh()
             else:
                 _LOGGER.error("Failed to activate scenario %d", scenario)
         except (OSError, TimeoutError, ConnectionError) as err:
-            _LOGGER.error(
-                "Network error activating scenario %d: %s", scenario, err)
+            _LOGGER.error("Network error activating scenario %d: %s", scenario, err)
         except (KeyError, AttributeError) as err:
-            _LOGGER.error(
-                "Invalid response activating scenario %d: %s", scenario, err)
+            _LOGGER.error("Invalid response activating scenario %d: %s", scenario, err)
         except RuntimeError as err:
-            _LOGGER.error(
-                "Runtime error activating scenario %d: %s", scenario, err)
+            _LOGGER.error("Runtime error activating scenario %d: %s", scenario, err)

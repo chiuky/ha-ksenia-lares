@@ -47,7 +47,10 @@
       "request": "launch",
       "module": "pytest",
       "console": "integratedTerminal",
-      "args": ["-vv", "${file}"]
+      "args": [
+        "-vv",
+        "${file}"
+      ]
     },
     {
       // Debug by attaching to local Home Assistant server using Remote Python Debugger.

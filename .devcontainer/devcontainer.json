@@ -4,7 +4,6 @@
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && script/setup",
   "postStartCommand": "script/bootstrap",
-
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1"
   },
@@ -12,7 +11,10 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   // Port 5683 udp is used by Shelly integration
-  "appPort": ["8123:8123", "5683:5683/udp"],
+  "appPort": [
+    "8123:8123",
+    "5683:5683/udp"
+  ],
   "runArgs": [
     "-e",
     "GIT_EDITOR=code --wait",
@@ -22,50 +24,83 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "charliermarsh.ruff",
-        "ms-python.pylint",
+        // Python Development
+        "ms-python.python",
         "ms-python.vscode-pylance",
-        "visualstudioexptteam.vscodeintellicode",
+        "ms-python.debugpy",
+        "ms-python.pylint",
+        // Code Quality & Formatting
+        "charliermarsh.ruff",
+        "usernamehw.errorlens",
+        "tamasfe.even-better-toml",
+        // Home Assistant Specific
+        "keesschollaart.vscode-home-assistant",
         "redhat.vscode-yaml",
+        // Git & Collaboration
+        "eamodio.gitlens",
+        "github.copilot",
+        "GitHub.copilot-chat",
+        "github.vscode-pull-request-github",
+        // Utilities
+        "aaron-bond.better-comments",
+        "wayou.vscode-todo-highlight",
+        "sleistner.vscode-fileutils",
+        // Testing & Coverage
+        "hbenl.vscode-test-explorer",
+        "ryanluker.vscode-coverage-gutters",
+        // Additional Tools
+        "visualstudioexptteam.vscodeintellicode",
         "esbenp.prettier-vscode",
-        "GitHub.vscode-pull-request-github",
-        "GitHub.copilot"
+        "hediet.vscode-drawio"
       ],
       // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
       "settings": {
-        "python.experiments.optOutFrom": ["pythonTestAdapter"],
-        "python.defaultInterpreterPath": "/home/vscode/.local/ha-venv/bin/python",
-        "python.pythonPath": "/home/vscode/.local/ha-venv/bin/python",
-        "python.terminal.activateEnvInCurrentTerminal": true,
-        "python.testing.pytestArgs": ["--no-cov"],
-        "pylint.importStrategy": "fromEnvironment",
-        "editor.formatOnPaste": false,
-        "editor.formatOnSave": true,
-        "editor.formatOnType": true,
-        "files.trimTrailingWhitespace": true,
-        "terminal.integrated.profiles.linux": {
-          "zsh": {
-            "path": "/usr/bin/zsh"
-          }
-        },
-        "terminal.integrated.defaultProfile.linux": "zsh",
-        "yaml.customTags": [
-          "!input scalar",
-          "!secret scalar",
-          "!include_dir_named scalar",
-          "!include_dir_list scalar",
-          "!include_dir_merge_list scalar",
-          "!include_dir_merge_named scalar"
+        // Please keep this file (mostly!) in sync with settings in home-assistant/.devcontainer/devcontainer.json
+        // Added --no-cov to work around TypeError: message must be set
+        // https://github.com/microsoft/vscode-python/issues/14067
+        "python.testing.pytestArgs": [
+          "--no-cov"
         ],
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff"
-        },
+        // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
+        "python.testing.pytestEnabled": false,
+        // https://code.visualstudio.com/docs/python/linting#_general-settings
+        "pylint.importStrategy": "fromEnvironment",
+        "python.analysis.include": [
+          "config/custom_components/*.py"
+        ],
         "json.schemas": [
           {
-            "fileMatch": ["homeassistant/components/*/manifest.json"],
-            "url": "${containerWorkspaceFolder}/script/json_schemas/manifest_schema.json"
+            "fileMatch": [
+              "homeassistant/components/*/manifest.json"
+            ],
+            // This value differs between working with devcontainer and locally, therefor this value should NOT be in sync!
+            "url": "homeassistant/script/json_schemas/manifest_schema.json"
           }
-        ]
+        ],
+        "python.analysis.autoImportCompletions": true,
+        "files.watcherExclude": {
+          "**/.venv/**": true,
+          "**/__pycache__/**": true,
+          "**/.pytest_cache/**": true
+        },
+        "files.trimTrailingWhitespace": true,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.formatOnSaveMode": "file",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+          }
+        },
+        "[toml]": {
+          "editor.defaultFormatter": "tamasfe.even-better-toml",
+          "editor.formatOnSave": true
+        },
+        "ruff.configurationPreference": "filesystemFirst"
       }
     }
   }

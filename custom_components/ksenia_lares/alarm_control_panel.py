@@ -7,13 +7,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CONF_ALARM_PANEL_NAME,
+    CONF_ALARM_PANELS,
     CONF_PARTITION_AWAY,
     CONF_PARTITION_NIGHT,
     CONF_SCENARIO_AWAY,
     CONF_SCENARIO_DISARM,
     CONF_SCENARIO_NIGHT,
-    CONF_ALARM_PANELS,
-    CONF_ALARM_PANEL_NAME,
     DATA_COORDINATOR,
     DOMAIN,
 )
@@ -43,10 +43,14 @@ async def async_setup_entry(
                 CONF_ALARM_PANEL_NAME: "Default",
                 # No global PIN exposure; panel PIN will be required via options edit
                 CONF_PARTITION_AWAY: config_entry.options.get(CONF_PARTITION_AWAY, []),
-                CONF_PARTITION_NIGHT: config_entry.options.get(CONF_PARTITION_NIGHT, []),
+                CONF_PARTITION_NIGHT: config_entry.options.get(
+                    CONF_PARTITION_NIGHT, []
+                ),
                 CONF_SCENARIO_NIGHT: config_entry.options.get(CONF_SCENARIO_NIGHT, ""),
                 CONF_SCENARIO_AWAY: config_entry.options.get(CONF_SCENARIO_AWAY, ""),
-                CONF_SCENARIO_DISARM: config_entry.options.get(CONF_SCENARIO_DISARM, ""),
+                CONF_SCENARIO_DISARM: config_entry.options.get(
+                    CONF_SCENARIO_DISARM, ""
+                ),
             }
         ]
 

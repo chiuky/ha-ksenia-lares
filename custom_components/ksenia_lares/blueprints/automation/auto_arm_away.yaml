@@ -1,0 +1,92 @@
+blueprint:
+  name: Ksenia Lares - Auto Arm Away
+  description: >
+    Automatically arm the Ksenia Lares alarm in 'away' mode when everyone leaves home.
+    Optionally checks if specific zones (doors/windows) are closed before arming.
+  domain: automation
+  source_url: https://github.com/chiuky/ha-ksenia-lares/blob/main/custom_components/ksenia_lares/blueprints/automation/auto_arm_away.yaml
+
+  input:
+    alarm_device:
+      name: Alarm Device
+      description: The Ksenia Lares alarm control panel device
+      selector:
+        device:
+          integration: ksenia_lares
+          entity:
+            domain: alarm_control_panel
+
+    presence_entity:
+      name: Presence Entity
+      description: Entity that tracks if anyone is home (e.g., group.all_persons, zone.home)
+      selector:
+        entity:
+          domain:
+            - group
+            - zone
+            - binary_sensor
+            - person
+
+    delay_minutes:
+      name: Delay before arming (minutes)
+      description: Wait time after everyone leaves before arming the alarm
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 1
+          unit_of_measurement: "minutes"
+          mode: slider
+
+    check_zones:
+      name: Check zones are closed
+      description: Verify specific zones (doors/windows) are closed before arming
+      default: false
+      selector:
+        boolean:
+
+    zones_to_check:
+      name: Zones to check (optional)
+      description: List of zone entities that must be closed before arming
+      default: []
+      selector:
+        entity:
+          integration: ksenia_lares
+          domain: binary_sensor
+          multiple: true
+
+trigger:
+  - platform: state
+    entity_id: !input presence_entity
+    to:
+      - "not_home"
+      - "off"
+      - "0"
+    for:
+      minutes: !input delay_minutes
+
+condition:
+  - condition: device
+    device_id: !input alarm_device
+    domain: ksenia_lares
+    type: is_disarmed
+
+  - condition: template
+    value_template: >
+      {% set check = check_zones %}
+      {% if not check %}
+        true
+      {% else %}
+        {% set zones = zones_to_check %}
+        {% if zones | length == 0 %}
+          true
+        {% else %}
+          {{ zones | select('is_state', 'on') | list | length == 0 }}
+        {% endif %}
+      {% endif %}
+
+action:
+  - service: alarm_control_panel.alarm_arm_away
+    target:
+      device_id: !input alarm_device

@@ -7,7 +7,12 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_PIN, DATA_OUTPUTS, OUTPUT_STATUS_ON, ZONE_STATUS_NOT_USED
+from .const import (
+    CONF_PIN,
+    DATA_OUTPUTS,
+    OUTPUT_STATUS_ON,
+    ZONE_STATUS_NOT_USED,
+)
 from .coordinator import LaresDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)

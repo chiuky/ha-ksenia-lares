@@ -7,8 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_PIN,
     CONF_AUTOMATION_PIN,
+    CONF_PIN,
     DATA_COORDINATOR,
     DATA_OUTPUTS,
     DATA_ZONES,
@@ -50,7 +50,10 @@ async def async_setup_entry(
         # Prefer the automation pin provided during initial setup; fallback to options pin
         automation_pin = config_entry.data.get(CONF_AUTOMATION_PIN)
         options = {
-            CONF_PIN: automation_pin if automation_pin else config_entry.options.get(CONF_PIN)}
+            CONF_PIN: automation_pin
+            if automation_pin
+            else config_entry.options.get(CONF_PIN)
+        }
 
         # Fetch initial data so we have data when entities subscribe
         await coordinator.async_refresh()
@@ -59,17 +62,17 @@ async def async_setup_entry(
         outputs = coordinator.data.get(DATA_OUTPUTS)
 
         if zones is None and outputs is None:
-            _LOGGER.warning(
-                "No zones or outputs data available, skipping switch setup")
+            _LOGGER.warning("No zones or outputs data available, skipping switch setup")
             return
     except (KeyError, AttributeError, TypeError) as err:
         _LOGGER.error(
-            "Invalid data structure setting up switches: %s", err, exc_info=True)
+            "Invalid data structure setting up switches: %s", err, exc_info=True
+        )
         return
     except (OSError, TimeoutError) as err:
         _LOGGER.error("Network error setting up switches: %s", err)
         return
-    except (KeyError, AttributeError, TypeError, OSError, TimeoutError) as err:
+    except Exception as err:  # pylint: disable=broad-except
         _LOGGER.error("Error setting up switches: %s", err, exc_info=True)
         return
 
@@ -85,53 +88,68 @@ async def async_setup_entry(
         entities.extend(output_sensors)
 
         if entities:
-            _LOGGER.info("Adding %d switches (%d zones, %d outputs)",
-                         len(entities),
-                         len(zone_sensors),
-                         len(output_sensors))
+            _LOGGER.info(
+                "Adding %d switches (%d zones, %d outputs)",
+                len(entities),
+                len(zone_sensors),
+                len(output_sensors),
+            )
             async_add_entities(entities)
         else:
             _LOGGER.info("No switches to add")
 
     def _filter_zone_sensors(
-        coordinator, zones: list[dict] | None, zone_descriptions: list[str] | None, device_info: dict
+        coordinator,
+        zones: list[dict] | None,
+        zone_descriptions: list[str] | None,
+        device_info: dict,
     ) -> list:
         entities = []
         if zones is not None and zone_descriptions is not None:
             for idx, zone in enumerate(zones):
                 try:
                     if zone is not None and zone.get("status") != ZONE_STATUS_NOT_USED:
-                        description = zone_descriptions[idx] if idx < len(
-                            zone_descriptions) else f"Zone {idx}"
+                        description = (
+                            zone_descriptions[idx]
+                            if idx < len(zone_descriptions)
+                            else f"Zone {idx}"
+                        )
                         entities.append(
                             LaresBypassSwitchSensor(
                                 coordinator, idx, description, device_info, options
                             )
                         )
                 except (IndexError, KeyError) as err:
-                    _LOGGER.warning(
-                        "Error creating zone switch %d: %s", idx, err)
+                    _LOGGER.warning("Error creating zone switch %d: %s", idx, err)
                     continue
         return entities
 
     def _filter_output_sensors(
-        coordinator, outputs: list[dict] | None, output_descriptions: list[str] | None, device_info: dict
+        coordinator,
+        outputs: list[dict] | None,
+        output_descriptions: list[str] | None,
+        device_info: dict,
     ) -> list:
         entities = []
         if outputs is not None and output_descriptions is not None:
             for idx, output in enumerate(outputs):
                 try:
-                    if output is not None and output.get("type") != ZONE_STATUS_NOT_USED:
-                        description = output_descriptions[idx] if idx < len(
-                            output_descriptions) else f"Output {idx}"
+                    if (
+                        output is not None
+                        and output.get("type") != ZONE_STATUS_NOT_USED
+                    ):
+                        description = (
+                            output_descriptions[idx]
+                            if idx < len(output_descriptions)
+                            else f"Output {idx}"
+                        )
                         entities.append(
                             LaresOutputSensor(
                                 coordinator, idx, description, device_info, options
                             )
                         )
                 except (IndexError, KeyError) as err:
-                    _LOGGER.warning(
-                        "Error creating output switch %d: %s", idx, err)
+                    _LOGGER.warning("Error creating output switch %d: %s", idx, err)
                     continue
         return entities
 

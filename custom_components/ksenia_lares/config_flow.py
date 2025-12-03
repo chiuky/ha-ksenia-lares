@@ -17,6 +17,9 @@ import homeassistant.helpers.config_validation as cv
 
 from .base import LaresBase
 from .const import (
+    CONF_ALARM_PANEL_NAME,
+    CONF_ALARM_PANEL_PIN,
+    CONF_ALARM_PANELS,
     CONF_PARTITION_AWAY,
     CONF_PARTITION_NIGHT,
     CONF_SCAN_INTERVAL_OUTPUTS,
@@ -26,9 +29,6 @@ from .const import (
     CONF_SCENARIO_AWAY,
     CONF_SCENARIO_DISARM,
     CONF_SCENARIO_NIGHT,
-    CONF_ALARM_PANELS,
-    CONF_ALARM_PANEL_NAME,
-    CONF_ALARM_PANEL_PIN,
     DEFAULT_SCAN_INTERVAL_OUTPUTS,
     DEFAULT_SCAN_INTERVAL_PARTITIONS,
     DEFAULT_SCAN_INTERVAL_TEMPERATURES,
@@ -81,8 +81,7 @@ def build_panel_schema(
 ) -> vol.Schema:
     """Build a dynamic schema for panel configuration."""
     # Sort partitions and scenarios alphabetically
-    sorted_partitions = sorted(
-        [v for v in list(filter(None, partitions)) if v != ""])
+    sorted_partitions = sorted([v for v in list(filter(None, partitions)) if v != ""])
     sorted_scenarios = sorted(scenarios)
 
     select_partitions = {v: v for v in sorted_partitions}
@@ -93,14 +92,15 @@ def build_panel_schema(
     fields = {}
 
     if panel_name_editable:
-        fields[vol.Required(CONF_ALARM_PANEL_NAME,
-                            default=panel_name_default)] = str
+        fields[vol.Required(CONF_ALARM_PANEL_NAME, default=panel_name_default)] = str
     else:
         # For edit: show panel name as fixed
-        fields[vol.Required(
-            CONF_ALARM_PANEL_NAME,
-            default=panel_data.get(CONF_ALARM_PANEL_NAME, panel_name_default)
-        )] = vol.In([panel_data.get(CONF_ALARM_PANEL_NAME)])
+        fields[
+            vol.Required(
+                CONF_ALARM_PANEL_NAME,
+                default=panel_data.get(CONF_ALARM_PANEL_NAME, panel_name_default),
+            )
+        ] = vol.In([panel_data.get(CONF_ALARM_PANEL_NAME)])
 
     if panel_name_editable or not panel_data:
         fields[vol.Required(CONF_ALARM_PANEL_PIN)] = str
@@ -108,30 +108,33 @@ def build_panel_schema(
         # For edit: PIN is optional
         fields[vol.Optional(CONF_ALARM_PANEL_PIN)] = str
 
-    fields[vol.Required(
-        CONF_SCENARIO_DISARM,
-        default=panel_data.get(CONF_SCENARIO_DISARM, "")
-    )] = vol.In(sorted_scenarios)
+    fields[
+        vol.Required(
+            CONF_SCENARIO_DISARM, default=panel_data.get(CONF_SCENARIO_DISARM, "")
+        )
+    ] = vol.In(sorted_scenarios)
 
-    fields[vol.Required(
-        CONF_SCENARIO_AWAY,
-        default=panel_data.get(CONF_SCENARIO_AWAY, "")
-    )] = vol.In(sorted_scenarios)
+    fields[
+        vol.Required(CONF_SCENARIO_AWAY, default=panel_data.get(CONF_SCENARIO_AWAY, ""))
+    ] = vol.In(sorted_scenarios)
 
-    fields[vol.Optional(
-        CONF_PARTITION_AWAY,
-        default=panel_data.get(CONF_PARTITION_AWAY, [])
-    )] = cv.multi_select(select_partitions)
+    fields[
+        vol.Optional(
+            CONF_PARTITION_AWAY, default=panel_data.get(CONF_PARTITION_AWAY, [])
+        )
+    ] = cv.multi_select(select_partitions)
 
-    fields[vol.Optional(
-        CONF_SCENARIO_NIGHT,
-        default=panel_data.get(CONF_SCENARIO_NIGHT, "")
-    )] = vol.In(["", *sorted_scenarios])
+    fields[
+        vol.Optional(
+            CONF_SCENARIO_NIGHT, default=panel_data.get(CONF_SCENARIO_NIGHT, "")
+        )
+    ] = vol.In(["", *sorted_scenarios])
 
-    fields[vol.Optional(
-        CONF_PARTITION_NIGHT,
-        default=panel_data.get(CONF_PARTITION_NIGHT, [])
-    )] = cv.multi_select(select_partitions)
+    fields[
+        vol.Optional(
+            CONF_PARTITION_NIGHT, default=panel_data.get(CONF_PARTITION_NIGHT, [])
+        )
+    ] = cv.multi_select(select_partitions)
 
     return vol.Schema(fields)
 
@@ -246,7 +249,7 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -270,7 +273,9 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
             # Proceed to configure the first panel (mandatory)
             return await self.async_step_first_panel()
 
-        return self.async_show_form(step_id="scan_intervals", data_schema=STEP_SCAN_INTERVALS_SCHEMA)
+        return self.async_show_form(
+            step_id="scan_intervals", data_schema=STEP_SCAN_INTERVALS_SCHEMA
+        )
 
     async def async_step_first_panel(self, user_input=None) -> ConfigFlowResult:
         """Configure the first alarm panel (mandatory)."""
@@ -334,8 +339,7 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         panel_list = (
-            "\n".join(
-                f"- {p.get(CONF_ALARM_PANEL_NAME)}" for p in self._panels)
+            "\n".join(f"- {p.get(CONF_ALARM_PANEL_NAME)}" for p in self._panels)
             or "No panels configured"
         )
 
@@ -382,19 +386,17 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         target_name = None
-        if user_input and "target" in user_input and not user_input.get(
-            CONF_ALARM_PANEL_NAME
+        if (
+            user_input
+            and "target" in user_input
+            and not user_input.get(CONF_ALARM_PANEL_NAME)
         ):
             target_name = user_input["target"]
         elif user_input and CONF_ALARM_PANEL_NAME in user_input:
             target_name = user_input.get(CONF_ALARM_PANEL_NAME)
 
         panel = next(
-            (
-                p
-                for p in self._panels
-                if p.get(CONF_ALARM_PANEL_NAME) == target_name
-            ),
+            (p for p in self._panels if p.get(CONF_ALARM_PANEL_NAME) == target_name),
             None,
         )
         if panel is None:
@@ -431,9 +433,7 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
                 partitions, scenarios, panel_name_editable=False, panel_data=panel
             ),
             errors=errors,
-            description_placeholders={
-                "panel_name": panel.get(CONF_ALARM_PANEL_NAME)
-            },
+            description_placeholders={"panel_name": panel.get(CONF_ALARM_PANEL_NAME)},
         )
 
 
@@ -452,8 +452,7 @@ class LaresOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             self._base_options = user_input
             # Load existing panels
-            self._panels = list(
-                self.config_entry.options.get(CONF_ALARM_PANELS, []))
+            self._panels = list(self.config_entry.options.get(CONF_ALARM_PANELS, []))
             return await self.async_step_panels()
 
         zones_default = self.config_entry.options.get(
@@ -510,13 +509,11 @@ class LaresOptionsFlowHandler(OptionsFlow):
                     ]
                     return await self.async_step_panels()
             if action == "done":
-                combined = {**self._base_options,
-                            CONF_ALARM_PANELS: self._panels}
+                combined = {**self._base_options, CONF_ALARM_PANELS: self._panels}
                 return self.async_create_entry(title="", data=combined)
 
         panel_list = (
-            "\n".join(
-                f"- {p.get(CONF_ALARM_PANEL_NAME)}" for p in self._panels)
+            "\n".join(f"- {p.get(CONF_ALARM_PANEL_NAME)}" for p in self._panels)
             or "No panels configured"
         )
 
@@ -556,9 +553,7 @@ class LaresOptionsFlowHandler(OptionsFlow):
             step_id="add_panel",
             data_schema=build_panel_schema(partitions, scenarios),
             errors=errors,
-            description_placeholders={
-                "info": "Configure a dedicated alarm panel"
-            },
+            description_placeholders={"info": "Configure a dedicated alarm panel"},
         )
 
     async def async_step_edit_panel(self, user_input=None) -> ConfigFlowResult:
@@ -566,19 +561,17 @@ class LaresOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         target_name = None
-        if user_input and "target" in user_input and not user_input.get(
-            CONF_ALARM_PANEL_NAME
+        if (
+            user_input
+            and "target" in user_input
+            and not user_input.get(CONF_ALARM_PANEL_NAME)
         ):
             target_name = user_input["target"]
         elif user_input and CONF_ALARM_PANEL_NAME in user_input:
             target_name = user_input.get(CONF_ALARM_PANEL_NAME)
 
         panel = next(
-            (
-                p
-                for p in self._panels
-                if p.get(CONF_ALARM_PANEL_NAME) == target_name
-            ),
+            (p for p in self._panels if p.get(CONF_ALARM_PANEL_NAME) == target_name),
             None,
         )
         if panel is None:

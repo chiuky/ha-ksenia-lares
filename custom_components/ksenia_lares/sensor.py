@@ -6,7 +6,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_COORDINATOR, DATA_PARTITIONS, DATA_TEMPERATURES, DOMAIN
+from .const import (
+    DATA_COORDINATOR,
+    DATA_PARTITIONS,
+    DATA_TEMPERATURES,
+    DOMAIN,
+)
 from .lares_partition_sensor import LaresPartitionSensor
 from .lares_temperature_sensor import LaresTemperatureSensor
 
@@ -37,12 +42,14 @@ async def async_setup_entry(
         # Fetch initial data so we have data when entities subscribe
         await coordinator.async_refresh()
     except (KeyError, AttributeError, TypeError) as err:
-        _LOGGER.error("Invalid data structure setting up sensors: %s", err, exc_info=True)
+        _LOGGER.error(
+            "Invalid data structure setting up sensors: %s", err, exc_info=True
+        )
         return
     except (OSError, TimeoutError) as err:
         _LOGGER.error("Network error setting up sensors: %s", err)
         return
-    except Exception as err:
+    except Exception as err:  # pylint: disable=broad-except
         _LOGGER.error("Unexpected error setting up sensors: %s", err, exc_info=True)
         return
 
@@ -54,10 +61,12 @@ async def async_setup_entry(
         partition_sensors.extend(temperature_sensors)
 
         if partition_sensors:
-            _LOGGER.info("Adding %d sensors (%d partitions, %d temperatures)",
-                        len(partition_sensors),
-                        len(partition_sensors) - len(temperature_sensors),
-                        len(temperature_sensors))
+            _LOGGER.info(
+                "Adding %d sensors (%d partitions, %d temperatures)",
+                len(partition_sensors),
+                len(partition_sensors) - len(temperature_sensors),
+                len(temperature_sensors),
+            )
             async_add_entities(partition_sensors)
         else:
             _LOGGER.info("No sensors to add")
@@ -70,10 +79,17 @@ async def async_setup_entry(
         if partitions is not None and partition_descriptions is not None:
             for idx, partition in enumerate(partitions):
                 try:
-                    if partition is not None and idx < len(partition_descriptions) and partition_descriptions[idx]:
+                    if (
+                        partition is not None
+                        and idx < len(partition_descriptions)
+                        and partition_descriptions[idx]
+                    ):
                         entities.append(
                             LaresPartitionSensor(
-                                coordinator, idx, partition_descriptions[idx], device_info
+                                coordinator,
+                                idx,
+                                partition_descriptions[idx],
+                                device_info,
                             )
                         )
                 except (IndexError, KeyError) as err:
@@ -98,7 +114,9 @@ async def async_setup_entry(
                             )
                         )
                 except (KeyError, TypeError) as err:
-                    _LOGGER.warning("Error creating temperature sensor %d: %s", idx, err)
+                    _LOGGER.warning(
+                        "Error creating temperature sensor %d: %s", idx, err
+                    )
                     continue
         return entities
 
