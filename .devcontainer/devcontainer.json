@@ -49,7 +49,6 @@
         "hbenl.vscode-test-explorer",
         "ryanluker.vscode-coverage-gutters",
         // Additional Tools
-        "visualstudioexptteam.vscodeintellicode",
         "esbenp.prettier-vscode",
         "hediet.vscode-drawio"
       ],
