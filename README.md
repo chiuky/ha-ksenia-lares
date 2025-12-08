@@ -1,7 +1,7 @@
 # Home Assistant Ksenia Lares integration
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-Ksenia Lares IP integration for home assistant. Compatible with BTicino alarm systems.
+Ksenia Lares IP integration for home assistant.
 
 **This integration will set up the following platforms.**
 

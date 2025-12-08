@@ -22,11 +22,13 @@ class LaresBase:
         password = data["password"]
         host = data["host"]
         port = data["port"]
+        use_https = data.get("use_https", True)
 
         self._auth = aiohttp.BasicAuth(username, password)
         self._ip = host
         self._port = port
-        self._url = f"http://{host}:{self._port}"
+        scheme = "https" if use_https else "http"
+        self._url = f"{scheme}://{host}:{self._port}"
         self._model = None
         self._zone_descriptions = None
         self._partition_descriptions = None
@@ -76,7 +78,8 @@ class LaresBase:
             "name": device_info["name"],
             "manufacturer": MANUFACTURER,
             "model": device_info["name"],
-            "sw_version": f"{device_info['version']}.{device_info['revision']}.{device_info['build']}",
+            "sw_version": f"{device_info['version']}\
+                .{device_info['revision']}.{device_info['build']}",
             "configuration_url": self._url,
         }
 
@@ -319,7 +322,8 @@ class LaresBase:
     ) -> bool:
         """Send Command."""
         url_param = "".join(f"&{k}={v}" for k, v in params.items())
-        path = f"cmd/cmdOk.xml?cmd={command}&pin={pin_code}&redirectPage=/xml/cmd/cmdError.xml{url_param}"
+        path = f"cmd/cmdOk.xml?cmd={command}&pin={pin_code}\
+        &redirectPage=/xml/cmd/cmdError.xml{url_param}"
 
         _LOGGER.debug("Sending command: %s with params: %s", command, params)
 
@@ -348,7 +352,7 @@ class LaresBase:
             _LOGGER.error("Network error executing command %s: %s", command, err)
             return False
 
-    async def get(self, path: str) -> etree._Element | None:
+    async def get(self, path: str) -> etree._Element | None:  # pylint: disable=c-extension-no-member
         """Get method."""
         url = f"{self._url}/xml/{path}"
 
@@ -368,8 +372,8 @@ class LaresBase:
                     _LOGGER.warning("Empty response from %s", url)
                     return None
 
-                parser = etree.XMLParser(resolve_entities=False)
-                return etree.fromstring(xml, parser=parser)
+                parser = etree.XMLParser(resolve_entities=False)  # pylint: disable=c-extension-no-member
+                return etree.fromstring(xml, parser=parser)  # pylint: disable=c-extension-no-member
 
         except aiohttp.ClientConnectorError as conn_err:
             _LOGGER.warning(
@@ -379,7 +383,7 @@ class LaresBase:
             )
         except aiohttp.ClientError as client_err:
             _LOGGER.warning("Client error accessing %s: %s", self._url, str(client_err))
-        except etree.XMLSyntaxError as xml_err:
+        except etree.XMLSyntaxError as xml_err:  # pylint: disable=c-extension-no-member
             _LOGGER.error(
                 "XML parsing error from %s: %s - Device may have returned invalid data",
                 self._url,

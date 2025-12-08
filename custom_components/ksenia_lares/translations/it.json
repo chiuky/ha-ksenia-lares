@@ -13,6 +13,7 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "use_https": "Usa HTTPS",
                     "port": "Porta",
                     "username": "Nome utente",
                     "password": "Password",
@@ -20,6 +21,7 @@
                     "scan_interval": "Intervallo di scansione principale (secondi)"
                 },
                 "data_description": {
+                    "use_https": "Abilita HTTPS (porta predefinita 443; HTTP usa 80)",
                     "automation_pin": "PIN utilizzato per attivare/disattivare le uscite (opzionale)",
                     "scan_interval": "Intervallo di polling principale per il coordinatore"
                 }

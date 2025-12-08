@@ -4,6 +4,7 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "use_https": "Use HTTPS",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -11,6 +12,7 @@
           "scan_interval": "Main scan interval (seconds)"
         },
         "data_description": {
+          "use_https": "Enable HTTPS (port defaults to 443; HTTP defaults to 80)",
           "automation_pin": "PIN used to switch outputs on/off (optional)",
           "scan_interval": "Main polling interval for the coordinator"
         }

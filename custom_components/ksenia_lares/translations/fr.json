@@ -13,6 +13,7 @@
             "user": {
                 "data": {
                     "host": "Hôte",
+                    "use_https": "Utiliser HTTPS",
                     "port": "Port",
                     "username": "Nom d'utilisateur",
                     "password": "Mot de passe",
@@ -20,6 +21,7 @@
                     "scan_interval": "Intervalle de scan principal (secondes)"
                 },
                 "data_description": {
+                    "use_https": "Activer HTTPS (port par défaut 443 ; HTTP utilise 80)",
                     "automation_pin": "Code PIN utilisé pour activer/désactiver les sorties (optionnel)",
                     "scan_interval": "Intervalle d'interrogation principal pour le coordinateur"
                 }

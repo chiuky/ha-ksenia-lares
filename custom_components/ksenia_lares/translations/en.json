@@ -13,6 +13,7 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "use_https": "Use HTTPS",
                     "port": "Port",
                     "username": "Username",
                     "password": "Password",
@@ -20,6 +21,7 @@
                     "scan_interval": "Main scan interval (seconds)"
                 },
                 "data_description": {
+                    "use_https": "Enable HTTPS (port defaults to 443; HTTP defaults to 80)",
                     "automation_pin": "PIN used to switch outputs on/off (optional)",
                     "scan_interval": "Main polling interval for the coordinator"
                 }

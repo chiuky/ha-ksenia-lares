@@ -158,17 +158,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     updated_data = {**config_entry.data}
     updated_options = {**config_entry.options}
 
-    if config_entry.version == 1:
+    # Collapse previous migrations into two versions only:
+    # - Version 1: initial release
+    # - Version 2: includes port default, scan intervals, and multi-panel options
+
+    if config_entry.version < 2:
         # Ensure port default
         updated_data.setdefault("port", 80)
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(
-            config_entry, data=updated_data, options=updated_options, version=2
-        )
-        _LOGGER.info("Migration to version 2 successful")
+        updated_data.setdefault("use_https", False)
 
-    if config_entry.version == 2:
-        # Ensure scan intervals
+        # Ensure scan intervals are present
         updated_data.setdefault(CONF_SCAN_INTERVAL_ZONES, DEFAULT_SCAN_INTERVAL_ZONES)
         updated_data.setdefault(
             CONF_SCAN_INTERVAL_PARTITIONS, DEFAULT_SCAN_INTERVAL_PARTITIONS
@@ -179,14 +178,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         updated_data.setdefault(
             CONF_SCAN_INTERVAL_OUTPUTS, DEFAULT_SCAN_INTERVAL_OUTPUTS
         )
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(
-            config_entry, data=updated_data, options=updated_options, version=3
-        )
-        _LOGGER.info("Migration to version 3 successful")
 
-    # Introduce version 4: convert single panel settings into alarm_panels list
-    if config_entry.version == 3:
+        # Convert single-panel settings into alarm_panels list if not present
         if CONF_ALARM_PANELS not in updated_options:
             panel = {
                 CONF_ALARM_PANEL_NAME: "Default",
@@ -200,10 +193,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             }
             updated_options[CONF_ALARM_PANELS] = [panel]
 
-        config_entry.version = 4
+        # Set unified latest version
         hass.config_entries.async_update_entry(
-            config_entry, data=updated_data, options=updated_options, version=4
+            config_entry, data=updated_data, options=updated_options, version=2
         )
-        _LOGGER.info("Migration to version 4 successful (multi panels)")
+        _LOGGER.info("Migration collapsed to version 2 successful")
 
     return True

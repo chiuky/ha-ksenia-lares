@@ -42,7 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("host"): str,
-        vol.Required("port", default=80): int,
+        vol.Required("use_https", default=True): bool,
+        vol.Required("port", default=443): int,
         vol.Required("username"): str,
         vol.Required("password"): str,
         vol.Optional("automation_pin"): str,
@@ -249,7 +250,7 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -304,7 +305,9 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="first_panel",
             data_schema=build_panel_schema(
-                partitions, scenarios, panel_name_default="Alarm panel"
+                partitions,
+                scenarios,
+                panel_name_default=f"Alarm panel - {len(self._panels) + 1}",
             ),
             errors=errors,
         )
@@ -377,7 +380,11 @@ class LaresConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="add_panel",
-            data_schema=build_panel_schema(partitions, scenarios),
+            data_schema=build_panel_schema(
+                partitions,
+                scenarios,
+                panel_name_default=f"Alarm panel - {len(self._panels) + 1}",
+            ),
             errors=errors,
         )
 
